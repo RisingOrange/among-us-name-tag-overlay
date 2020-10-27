@@ -11,8 +11,9 @@ from overlay import Overlay
 from overlay_monitor import active_speaker_indices
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
-GUILD = 'Test'
-DELAY = 4 # delay between updating everything
+GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
+# the user is in a voice_channel as he only can be in one
+DELAY = 4 # delay between updating the global variables by the discord_client_loop
 
 class MyClient(discord.Client):
 
