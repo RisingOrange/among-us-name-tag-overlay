@@ -30,11 +30,13 @@ class XOverlay():
         self.label['text'] = ''
         self.label.update()
         self.label.update_idletasks()
+        self.label.destroy()
 
 
 if __name__ == '__main__':
     overlay = XOverlay(1400, 30)
     time.sleep(2)
     overlay.hide()
+    time.sleep(2)
 
 
