@@ -8,7 +8,7 @@ class Overlay(wx.Frame):
                   wx.NO_BORDER | wx.FRAME_SHAPED  )
         wx.Frame.__init__(self, None, *args, **dargs, style=style)
         self.Bind(wx.EVT_MOTION, self.OnMouse)
-        self.SetTransparent( 220 )
+        self.SetTransparent(220)
 
         # put some text with a larger bold font on it
         st = wx.StaticText(self, label=text)
