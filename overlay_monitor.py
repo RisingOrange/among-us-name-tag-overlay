@@ -45,7 +45,6 @@ def active_speaker_indices(avatars):
         if len(loc[0]) != 0:
             avatar_present[i] = True
 
-    print(avatar_present)
     return [i for i, present in enumerate(avatar_present) if present]
     
 
