@@ -1,12 +1,12 @@
 import asyncio
-import time
 
 import cv2
 import discord
 import requests
+from functools import lru_cache
 
+from overlay import Overlay
 from overlay_monitor import active_speaker_indices
-from text_overlay import XOverlay
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 GUILD = 'Test'
@@ -33,16 +33,23 @@ class MyClient(discord.Client):
         results = []
         avatar_urls = [member.avatar_url for member in self._voice_channel_members()]
         for url in avatar_urls:
-            avatar_file_name = 'avatar.png'
-            with requests.get(url) as r:
-                with open(avatar_file_name, 'wb') as f:
-                    f.write(r.content)
-            img = cv2.imread(avatar_file_name)
+            img = self.download_avatar_img(url)
             results.append(img)
         return results
 
     # async def on_voice_state_update(self, member, before, after):
     #     pass
+    
+
+@lru_cache(20)
+def download_avatar_img(url):
+    avatar_file_name = 'avatar.png'
+    with requests.get(url) as r:
+        with open(avatar_file_name, 'wb') as f:
+            f.write(r.content)
+    img = cv2.imread(avatar_file_name)
+    return img
+
 
 def speaker_overlays(speaker_indices):
     results = []
