@@ -7,7 +7,6 @@ import cv2
 import discord
 import requests
 import wx
-
 from overlay_monitor import active_speaker_indices
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
@@ -79,7 +78,8 @@ def discord_client_loop():
     return discord_client_loop
 
 
-class Overlay(wx.Frame):
+class NameOverlay(wx.Frame):
+    # a draggable overlay object that has a name on it and can be highlighted
     def __init__(self, *args, text=None, **dargs):
         assert text is not None
 
@@ -127,6 +127,7 @@ class Overlay(wx.Frame):
 
 
 class Root(wx.Frame):
+    # root gui element that is invisible and controls the NameOverlays
     def __init__(self):
         wx.Frame.__init__(self, None)
         
@@ -136,15 +137,15 @@ class Root(wx.Frame):
 
     def on_timer(self):
 
-        self.overlays_update_add_remove()
-        self.overlays_update_highlights()
+        self.update_overlay_presences()
+        self.update_overlay_highlight_states()
             
         if not quit:
             wx.CallLater(2000, self.on_timer)
         else:
             wx.Exit()
 
-    def overlays_update_add_remove(self):
+    def update_overlay_presences(self):
         prev_names = list(self.overlays_by_name.keys())
 
         # add, remove overlays based on names
@@ -152,7 +153,7 @@ class Root(wx.Frame):
             # add overlays for new names
             new_names = set(names) - set(prev_names)
             for name in new_names:
-                self.overlays_by_name[name] = Overlay(text=name)
+                self.overlays_by_name[name] = NameOverlay(text=name)
 
             # remove overlays for gone names
             gone_names = set(prev_names) - set(names)
@@ -160,7 +161,7 @@ class Root(wx.Frame):
                 self.overlays_by_name[name].Close()
                 del self.overlays_by_name[name]
 
-    def overlays_update_highlights(self):
+    def update_overlay_highlight_states(self):
         speaker_names = [names[speaker_idx] for speaker_idx in speaker_indices]
         non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
         for name in speaker_names:
