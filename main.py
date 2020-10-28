@@ -107,9 +107,11 @@ class Overlay(wx.Frame):
 
     def highlight(self):
         self.st.SetForegroundColour((15, 255, 63))
+        self.st.Refresh()
 
     def dehighlight(self):
         self.st.SetForegroundColour((0, 0, 0))
+        self.st.Refresh()
 
     def on_mouse(self, event):
         """implement dragging"""
@@ -142,14 +144,6 @@ class Root(wx.Frame):
         else:
             wx.Exit()
 
-    def overlays_update_highlights(self):
-        speaker_names = [names[speaker_idx] for speaker_idx in speaker_indices]
-        non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
-        for name in speaker_names:
-            self.overlays_by_name[name].highlight()
-        for name in non_speaker_names:
-            self.overlays_by_name[name].dehighlight()
-
     def overlays_update_add_remove(self):
         prev_names = list(self.overlays_by_name.keys())
 
@@ -165,6 +159,14 @@ class Root(wx.Frame):
             for name in gone_names:
                 self.overlays_by_name[name].Close()
                 del self.overlays_by_name[name]
+
+    def overlays_update_highlights(self):
+        speaker_names = [names[speaker_idx] for speaker_idx in speaker_indices]
+        non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
+        for name in speaker_names:
+            self.overlays_by_name[name].highlight()
+        for name in non_speaker_names:
+            self.overlays_by_name[name].dehighlight()
 
 
 def gui_loop():
