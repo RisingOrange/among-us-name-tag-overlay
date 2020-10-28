@@ -5,14 +5,17 @@ from functools import lru_cache
 
 import cv2
 import discord
+import keyboard
 import requests
 import wx
+
 from overlay_monitor import active_speaker_indices
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
 # the user is in a voice_channel as he only can be in one
 DELAY = 4 # delay between updating the global variables by the discord_client_loop
+PAUSE_HOTKEY = 'ctrl+alt+y'
 
 class MyClient(discord.Client):
 
@@ -40,6 +43,9 @@ class MyClient(discord.Client):
         if quit:
             raise KeyboardInterrupt('quitting')
 
+        if pause:
+            return
+
         now = time.time()
         if (now - _last_update_time) < DELAY:
             return
@@ -63,6 +69,7 @@ def download_avatar_img(url):
 
 # global variables for communication between threads
 quit = False
+pause = False
 names = []
 speaker_indices = []
 _last_update_time = time.time() - DELAY
@@ -137,11 +144,24 @@ class Root(wx.Frame):
 
     def on_timer(self):
 
-        self.update_overlay_presences()
-        self.update_overlay_highlight_states()
+        if keyboard.is_pressed(PAUSE_HOTKEY):
+            global pause
+            pause = not pause
+            print('pause = ', pause)
+            
+            if pause:
+                for overlay in self.overlays_by_name.values():
+                    overlay.Hide()
+            else:
+                for overlay in self.overlays_by_name.values():
+                    overlay.Show()
+
+        if not pause:
+            self.update_overlay_presences()
+            self.update_overlay_highlight_states()
             
         if not quit:
-            wx.CallLater(2000, self.on_timer)
+            wx.CallLater(500, self.on_timer)
         else:
             wx.Exit()
 
