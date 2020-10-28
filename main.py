@@ -95,10 +95,13 @@ class Overlay(wx.Frame):
         font.PointSize += 5
         font = font.Bold()
         self.st.SetFont(font)
-
+        
         # resize frame to size of the text
         frame_size = self.st.GetSize()
         self.SetSize(frame_size)
+
+        # make the frame draggable by the text
+        self.st.Bind(wx.EVT_MOTION, self.on_mouse)
 
         self.Show(True)
 
@@ -166,7 +169,7 @@ class Root(wx.Frame):
 
 def gui_loop():
     app = wx.App()
-    r = Root()
+    root = Root()
     app.MainLoop()
 
 
