@@ -79,7 +79,7 @@ def download_avatar_img(url):
 
 
 
-def discord_client_loop(state):
+def run_dicord_client(state):
     intents = discord.Intents.default()
     intents.members = True
     discord_client = DicordClient(intents=intents, state=state)
@@ -146,7 +146,7 @@ class Root(wx.Frame):
             self.overlays_by_name[name].dehighlight()
 
 
-def gui_loop(state):
+def run_gui(state):
     app = wx.App()
     root = Root(state)
     app.MainLoop()
@@ -155,8 +155,8 @@ def gui_loop(state):
 def setup(state):
 
     jobs = [
-        mp.Process(target=gui_loop, args=(state,)),
-        mp.Process(target=discord_client_loop, args=(state,)),
+        mp.Process(target=run_gui, args=(state,)),
+        mp.Process(target=run_dicord_client, args=(state,)),
     ]
 
     for job in jobs:
