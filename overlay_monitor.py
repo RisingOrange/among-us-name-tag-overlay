@@ -1,26 +1,33 @@
 import cv2
-import keyboard
+import d3dshot
+
 import numpy as np
-import pyautogui
+
 
 # threshold for matching avatars, this seems to be a good value
 THRESHOLD = 0.8
 
 
+d3d = None
+
+def get_d3d():
+    global d3d
+    if d3d is None:
+        d3d = d3dshot.create()
+    return d3d
+
+    
 def active_speaker_indices(avatars):
     # given the avatars of the users in the voice-channel, return the indeces of
     # the useres of which the avatar is highlighted in the overlay
 
-    # make a screenshot
-    screenshot_img_path = 'screenshot.png'
-    pyautogui.screenshot(screenshot_img_path)
-    screenshot = cv2.imread(screenshot_img_path, 1)
+    screenshot_img = screenshot()
 
     avatar_present = [False] * len(avatars)
     # for each avatar
     for i, avatar in enumerate(avatars):
     #   calculate the region where the avatar is (possibly highlighted) based on its index
-        cropped = screenshot[(25 + i*45) : (25 + (i+1)*45), 30 : 100]
+        cropped = screenshot_img[(25 + i*45) : (25 + (i+1)*45), 30 : 100]
 
         
 
@@ -46,13 +53,28 @@ def active_speaker_indices(avatars):
             avatar_present[i] = True
 
     return [i for i, present in enumerate(avatar_present) if present]
+
+
+def screenshot():
+    result_pil = get_d3d().screenshot()
+    result_cv2 = np.array(result_pil)
+
+    # convert RGB to BGR
+    return result_cv2[:, :, ::-1]
+
+
+def for_profiling():
     
-
-
-
-
+    for _ in range(10):
+        default_avatar = cv2.imread('avatar.png')
+        indeces = active_speaker_indices([default_avatar, default_avatar, default_avatar, default_avatar, default_avatar])
+        print(indeces)
 
 if __name__ == '__main__':
+
+    import keyboard
+
+    # for_profiling()
 
     # testing with default avatars
     while True:
@@ -60,3 +82,5 @@ if __name__ == '__main__':
             default_avatar = cv2.imread('avatar.png')
             indeces = active_speaker_indices([default_avatar, default_avatar])
             print(indeces)
+
+    
