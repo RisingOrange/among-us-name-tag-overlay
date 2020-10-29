@@ -29,23 +29,11 @@ def active_speaker_indices(avatars):
     #   calculate the region where the avatar is (possibly highlighted) based on its index
         cropped = screenshot_img[(25 + i*45) : (25 + (i+1)*45), 30 : 100]
 
-        
-
-        # cv2.imshow('.', cropped)
-        # cv2.waitKey(0)
-        
-        
         # compare the region with the avatar
         small_avatar = cv2.resize(avatar, (40, 40))
         small_avatar = small_avatar[5:35, 5:35]
 
-        # cv2.imwrite('cropped.png', cropped)
-        # cv2.imwrite('small_avatar.png', small_avatar)
-
         match_result = cv2.matchTemplate(cropped, small_avatar, cv2.TM_CCOEFF_NORMED)
-
-        # cv2.imshow('match', match_result)
-        # cv2.waitKey(0)
 
         loc = np.where(match_result >= THRESHOLD)
 
@@ -63,18 +51,9 @@ def screenshot():
     return result_cv2[:, :, ::-1]
 
 
-def for_profiling():
-    
-    for _ in range(10):
-        default_avatar = cv2.imread('avatar.png')
-        indeces = active_speaker_indices([default_avatar, default_avatar, default_avatar, default_avatar, default_avatar])
-        print(indeces)
-
 if __name__ == '__main__':
 
     import keyboard
-
-    # for_profiling()
 
     # testing with default avatars
     while True:
