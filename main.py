@@ -9,7 +9,7 @@ import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_indices
-from name_overlay import NameOverlay
+from name_overlay import NameTag
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
@@ -99,9 +99,9 @@ class GuiRoot(wx.Frame):
 
         self.overlays_by_name = dict()
         self.active_speakers = []
-        self.main()
+        self._main()
 
-    def main(self):
+    def _main(self):
 
         if keyboard.is_pressed(PAUSE_HOTKEY):
             self.state['pause'] = not self.state['pause']
@@ -115,16 +115,19 @@ class GuiRoot(wx.Frame):
                     overlay.Show()
 
         if not self.state['pause']:
-            self.update_overlay_presences()
-            self.update_overlay_highlight_states()
+            self._update_name_tags()
 
         if not self.state['quit']:
             # Call main again in 0.5 seconds
-            wx.CallLater(500, self.main)
+            wx.CallLater(500, self._main)
         else:
             wx.Exit()
 
-    def update_overlay_presences(self):
+    def _update_name_tags(self):
+        self._update_name_tag_presences()
+        self._update_name_tag_highlight_states()
+
+    def _update_name_tag_presences(self):
         prev_names = list(self.overlays_by_name.keys())
 
         # add, remove overlays based on names
@@ -132,7 +135,7 @@ class GuiRoot(wx.Frame):
             # add overlays for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                self.overlays_by_name[name] = NameOverlay(text=name)
+                self.overlays_by_name[name] = NameTag(text=name)
 
             # remove overlays for gone names
             gone_names = set(prev_names) - set(self.state['names'])
@@ -140,7 +143,7 @@ class GuiRoot(wx.Frame):
                 self.overlays_by_name[name].Close()
                 del self.overlays_by_name[name]
 
-    def update_overlay_highlight_states(self):
+    def _update_name_tag_highlight_states(self):
         speaker_names = [self.state['names'][speaker_idx]
                          for speaker_idx in self.state['speaker_indices']]
         non_speaker_names = set(
