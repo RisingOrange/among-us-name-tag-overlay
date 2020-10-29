@@ -12,13 +12,15 @@ from discord_overlay_monitor import active_speaker_indices
 from name_overlay import NameOverlay
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
-GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
+# guild where the voice channel that will be checked is (it could be better to check in which guild
+GUILD = 'Test'
 # the user is in a voice_channel as he only can be in one
-DELAY = 1 # delay between updating the global variables by the discord_client_loop
+DELAY = 1  # delay between updating the global variables by the discord_client_loop
 PAUSE_HOTKEY = 'ctrl+<'
 
 
 class DicordClient(discord.Client):
+    # connects to discord and updates the app state every DELAY seconds
 
     def __init__(self, *args, state=None, **dargs):
         assert state is not None
@@ -40,7 +42,8 @@ class DicordClient(discord.Client):
 
     def _voice_channel_member_avatars(self):
         results = []
-        avatar_urls = [member.avatar_url for member in self._voice_channel_members()]
+        avatar_urls = [
+            member.avatar_url for member in self._voice_channel_members()]
         for url in avatar_urls:
             img = download_avatar_img(url)
             results.append(img)
@@ -60,7 +63,8 @@ class DicordClient(discord.Client):
                 return
 
             self.state['names'] = self._voice_channel_member_names()
-            self.state['speaker_indices'] = active_speaker_indices(self._voice_channel_member_avatars())
+            self.state['speaker_indices'] = active_speaker_indices(
+                self._voice_channel_member_avatars())
 
             if self.state['speaker_indices']:
                 print(self.state['speaker_indices'])
@@ -78,7 +82,6 @@ def download_avatar_img(url):
     return img
 
 
-
 def run_dicord_client(state):
     intents = discord.Intents.default()
     intents.members = True
@@ -87,24 +90,23 @@ def run_dicord_client(state):
     discord_client.run(TOKEN, bot=False)
 
 
-
-class Root(wx.Frame):
+class GuiRoot(wx.Frame):
     # root gui element that is invisible and controls the NameOverlays
     def __init__(self, state):
         wx.Frame.__init__(self, None)
 
         self.state = state
-        
+
         self.overlays_by_name = dict()
         self.active_speakers = []
-        self.on_timer()
+        self.main()
 
-    def on_timer(self):
+    def main(self):
 
         if keyboard.is_pressed(PAUSE_HOTKEY):
             self.state['pause'] = not self.state['pause']
             print('pause = ', self.state['pause'])
-            
+
             if self.state['pause']:
                 for overlay in self.overlays_by_name.values():
                     overlay.Hide()
@@ -115,9 +117,10 @@ class Root(wx.Frame):
         if not self.state['pause']:
             self.update_overlay_presences()
             self.update_overlay_highlight_states()
-            
+
         if not self.state['quit']:
-            wx.CallLater(500, self.on_timer)
+            # Call main again in 0.5 seconds
+            wx.CallLater(500, self.main)
         else:
             wx.Exit()
 
@@ -138,8 +141,10 @@ class Root(wx.Frame):
                 del self.overlays_by_name[name]
 
     def update_overlay_highlight_states(self):
-        speaker_names = [self.state['names'][speaker_idx] for speaker_idx in self.state['speaker_indices']]
-        non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
+        speaker_names = [self.state['names'][speaker_idx]
+                         for speaker_idx in self.state['speaker_indices']]
+        non_speaker_names = set(
+            self.overlays_by_name.keys()) - set(speaker_names)
         for name in speaker_names:
             self.overlays_by_name[name].highlight()
         for name in non_speaker_names:
@@ -148,7 +153,7 @@ class Root(wx.Frame):
 
 def run_gui(state):
     app = wx.App()
-    root = Root(state)
+    root = GuiRoot(state)
     app.MainLoop()
 
 
@@ -166,17 +171,16 @@ def setup(state):
         job.join()
 
 
-        
 if __name__ == '__main__':
 
     manager = mp.Manager()
     state = manager.dict()
-    
+
     state['quit'] = False
     state['pause'] = False
     state['names'] = []
     state['speaker_indices'] = []
-    
+
     try:
         setup(state)
     except KeyboardInterrupt:
