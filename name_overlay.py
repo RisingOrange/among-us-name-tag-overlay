@@ -7,7 +7,7 @@ class NameOverlay(wx.Frame):
         self.text = text
 
         style = ( wx.CLIP_CHILDREN | wx.STAY_ON_TOP | wx.FRAME_NO_TASKBAR |
-                  wx.NO_BORDER | wx.FRAME_SHAPED  )
+                  wx.NO_BORDER | wx.FRAME_SHAPED )
         wx.Frame.__init__(self, None, *args, **dargs, style=style)
         
         self.SetTransparent(220)
