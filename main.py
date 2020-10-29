@@ -47,9 +47,6 @@ class DicordClient(discord.Client):
 
     async def on_voice_state_update(self, member, before, after):
 
-        # with open('bonjour.txt', 'w'):
-        #     pass
-
         if self.state['quit']:
             raise KeyboardInterrupt('quitting')
 
