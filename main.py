@@ -1,5 +1,4 @@
-import asyncio
-import concurrent.futures
+import multiprocessing as mp
 import time
 from functools import lru_cache
 
@@ -12,21 +11,12 @@ import wx
 from name_overlay import NameOverlay
 from overlay_monitor import active_speaker_indices
 
+
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
 # the user is in a voice_channel as he only can be in one
 DELAY = 1 # delay between updating the global variables by the discord_client_loop
 PAUSE_HOTKEY = 'ctrl+<'
-
-
-# contains variables that multiple threads access
-class AppState:
-    def __init__(self):
-        self.quit = False
-        self.pause = False
-        self.names = []
-        self.speaker_indices = []
-        self._last_update_time = time.time() - DELAY
 
 
 class DicordClient(discord.Client):
@@ -57,22 +47,25 @@ class DicordClient(discord.Client):
 
     async def on_voice_state_update(self, member, before, after):
 
-        if self.state.quit:
+        # with open('bonjour.txt', 'w'):
+        #     pass
+
+        if self.state['quit']:
             raise KeyboardInterrupt('quitting')
 
-        if self.state.pause:
+        if self.state['pause']:
             return
 
         now = time.time()
-        if (now - self.state._last_update_time) < DELAY:
+        if (now - self.state['_last_update_time']) < DELAY:
             return
-        self.state._last_update_time = now
+        self.state['_last_update_time'] = now
 
-        self.state.names = self.voice_channel_member_names()
-        self.state.speaker_indices = active_speaker_indices(self.voice_channel_member_avatars())
+        self.state['names'] = self.voice_channel_member_names()
+        self.state['speaker_indices'] = active_speaker_indices(self.voice_channel_member_avatars())
 
-        if self.state.speaker_indices:
-            print(self.state.speaker_indices)
+        if self.state['speaker_indices']:
+            print(self.state['speaker_indices'])
 
 
 @lru_cache(20)
@@ -91,9 +84,7 @@ def discord_client_loop(state):
     intents.members = True
     discord_client = DicordClient(intents=intents, state=state)
 
-    discord_client_loop = asyncio.get_event_loop()
-    discord_client_loop.create_task(discord_client.start(TOKEN, bot=False))
-    return discord_client_loop
+    discord_client.run(TOKEN, bot=False)
 
 
 
@@ -111,21 +102,21 @@ class Root(wx.Frame):
     def on_timer(self):
 
         if keyboard.is_pressed(PAUSE_HOTKEY):
-            self.state.pause = not self.state.pause
-            print('pause = ', self.state.pause)
+            self.state['pause'] = not self.state['pause']
+            print('pause = ', self.state['pause'])
             
-            if self.state.pause:
+            if self.state['pause']:
                 for overlay in self.overlays_by_name.values():
                     overlay.Hide()
             else:
                 for overlay in self.overlays_by_name.values():
                     overlay.Show()
 
-        if not self.state.pause:
+        if not self.state['pause']:
             self.update_overlay_presences()
             self.update_overlay_highlight_states()
             
-        if not self.state.quit:
+        if not self.state['quit']:
             wx.CallLater(500, self.on_timer)
         else:
             wx.Exit()
@@ -134,20 +125,20 @@ class Root(wx.Frame):
         prev_names = list(self.overlays_by_name.keys())
 
         # add, remove overlays based on names
-        if set(self.state.names) != set(self.overlays_by_name.keys()):
+        if set(self.state['names']) != set(self.overlays_by_name.keys()):
             # add overlays for new names
-            new_names = set(self.state.names) - set(prev_names)
+            new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
                 self.overlays_by_name[name] = NameOverlay(text=name)
 
             # remove overlays for gone names
-            gone_names = set(prev_names) - set(self.state.names)
+            gone_names = set(prev_names) - set(self.state['names'])
             for name in gone_names:
                 self.overlays_by_name[name].Close()
                 del self.overlays_by_name[name]
 
     def update_overlay_highlight_states(self):
-        speaker_names = [self.state.names[speaker_idx] for speaker_idx in self.state.speaker_indices]
+        speaker_names = [self.state['names'][speaker_idx] for speaker_idx in self.state['speaker_indices']]
         non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
         for name in speaker_names:
             self.overlays_by_name[name].highlight()
@@ -162,20 +153,32 @@ def gui_loop(state):
 
 
 def setup(state):
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
-    future1 = executor.submit(gui_loop, state)
-    future2 = executor.submit(discord_client_loop(state).run_forever())
-    
-    # main thread must be doing "work" to be able to catch a Ctrl+C 
-    while not future1.done() and future2.done():
-        time.sleep(1)
+
+    jobs = [
+        mp.Process(target=gui_loop, args=(state,)),
+        mp.Process(target=discord_client_loop, args=(state,)),
+    ]
+
+    for job in jobs:
+        job.start()
+
+    for job in jobs:
+        job.join()
+
 
         
 if __name__ == '__main__':
 
+    manager = mp.Manager()
+    state = manager.dict()
     
-    state = AppState()
+    state['quit'] = False
+    state['pause'] = False
+    state['names'] = []
+    state['speaker_indices'] = []
+    state['_last_update_time'] = time.time() - DELAY
+    
     try:
         setup(state)
     except KeyboardInterrupt:
-        state.quit = True
+        state['quit'] = True
