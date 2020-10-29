@@ -1,6 +1,7 @@
 import wx
 
-class Overlay(wx.Frame):
+class NameOverlay(wx.Frame):
+    # a draggable overlay object that has a name on it and can be highlighted
     def __init__(self, *args, text=None, **dargs):
         assert text is not None
 
@@ -11,17 +12,31 @@ class Overlay(wx.Frame):
         self.SetTransparent(220)
 
         # put some text with a larger bold font on it
-        st = wx.StaticText(self, label=text)
-        font = st.GetFont()
+        self.st = wx.StaticText(self, label=text)
+        font = self.st.GetFont()
         font.PointSize += 5
         font = font.Bold()
-        st.SetFont(font)
+        self.st.SetFont(font)
+        
+        # resize frame to size of the text
+        frame_size = self.st.GetSize()
+        self.SetSize(frame_size)
+
+        # make the frame draggable by the text
+        self.st.Bind(wx.EVT_MOTION, self.on_mouse)
 
         self.Show(True)
 
+    def highlight(self):
+        self.st.SetForegroundColour((15, 255, 63))
+        self.st.Refresh()
+
+    def dehighlight(self):
+        self.st.SetForegroundColour((0, 0, 0))
+        self.st.Refresh()
 
     def on_mouse(self, event):
-        """implement dragging"""
+        # implement dragging
         if not event.Dragging():
             self._dragPos = None
             return
@@ -33,27 +48,12 @@ class Overlay(wx.Frame):
             self.SetPosition( self.GetPosition() - displacement )
 
 
-class Root(wx.Frame):
-    def __init__(self):
-        wx.Frame.__init__(self, None)
-        
-        self.overlays = []
-        self.on_timer()
 
-    def on_timer(self):
-        if len(self.overlays) > 2:
-            ov = self.overlays.pop(0)
-            ov.Destroy()
-
-        self.overlays.append(Overlay(text='FloatingOrange', size=(200, 30)))
-        wx.CallLater(2000, self.on_timer)
-
-
-def main():
+def gui_loop():
     app = wx.App()
-    r = Root()
+    r = NameOverlay(text='a_name')
     app.MainLoop()
 
 
 if __name__ == '__main__':
-    main()
+    gui_loop()
