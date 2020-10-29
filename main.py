@@ -9,7 +9,7 @@ import requests
 import wx
 
 from name_overlay import NameOverlay
-from overlay_monitor import active_speaker_indices
+from discord_overlay_monitor import active_speaker_indices
 
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
