@@ -1,6 +1,6 @@
 import wx
 
-class NameOverlay(wx.Frame):
+class NameTag(wx.Frame):
     # a draggable overlay object that has a name on it and can be highlighted
     def __init__(self, *args, text=None, **dargs):
         assert text is not None
@@ -63,7 +63,7 @@ class NameOverlay(wx.Frame):
 
 def gui_loop():
     app = wx.App()
-    r = NameOverlay(text='a_name')
+    r = NameTag(text='a_name')
 
     app.MainLoop()
 
