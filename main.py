@@ -1,5 +1,5 @@
+import asyncio
 import multiprocessing as mp
-import time
 from functools import lru_cache
 
 import cv2
@@ -8,9 +8,8 @@ import keyboard
 import requests
 import wx
 
-from name_overlay import NameOverlay
 from discord_overlay_monitor import active_speaker_indices
-
+from name_overlay import NameOverlay
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
@@ -27,6 +26,8 @@ class DicordClient(discord.Client):
 
         super().__init__(*args, **dargs)
 
+        self.loop.create_task(self.main())
+
     def _voice_channel_members(self):
         # returns the voice channel members of the voice channel the user is in in the GUILD
         guild = next(guild for guild in self.guilds if guild.name == GUILD)
@@ -34,10 +35,10 @@ class DicordClient(discord.Client):
         voice_channel = me_as_member.voice.channel
         return voice_channel.members
 
-    def voice_channel_member_names(self):
+    def _voice_channel_member_names(self):
         return [member.name for member in self._voice_channel_members()]
 
-    def voice_channel_member_avatars(self):
+    def _voice_channel_member_avatars(self):
         results = []
         avatar_urls = [member.avatar_url for member in self._voice_channel_members()]
         for url in avatar_urls:
@@ -45,24 +46,26 @@ class DicordClient(discord.Client):
             results.append(img)
         return results
 
-    async def on_voice_state_update(self, member, before, after):
+    async def main(self):
 
-        if self.state['quit']:
-            raise KeyboardInterrupt('quitting')
+        while not self.is_ready():
+            await asyncio.sleep(0.5)
 
-        if self.state['pause']:
-            return
+        while True:
 
-        now = time.time()
-        if (now - self.state['_last_update_time']) < DELAY:
-            return
-        self.state['_last_update_time'] = now
+            if self.state['quit']:
+                raise KeyboardInterrupt('quitting')
 
-        self.state['names'] = self.voice_channel_member_names()
-        self.state['speaker_indices'] = active_speaker_indices(self.voice_channel_member_avatars())
+            if self.state['pause']:
+                return
 
-        if self.state['speaker_indices']:
-            print(self.state['speaker_indices'])
+            self.state['names'] = self._voice_channel_member_names()
+            self.state['speaker_indices'] = active_speaker_indices(self._voice_channel_member_avatars())
+
+            if self.state['speaker_indices']:
+                print(self.state['speaker_indices'])
+
+            await asyncio.sleep(DELAY)
 
 
 @lru_cache(20)
@@ -173,7 +176,6 @@ if __name__ == '__main__':
     state['pause'] = False
     state['names'] = []
     state['speaker_indices'] = []
-    state['_last_update_time'] = time.time() - DELAY
     
     try:
         setup(state)
