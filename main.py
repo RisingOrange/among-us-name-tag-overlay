@@ -17,7 +17,25 @@ GUILD = 'Test' # guild where the voice channel that will be checked is (it could
 DELAY = 4 # delay between updating the global variables by the discord_client_loop
 PAUSE_HOTKEY = 'ctrl+alt+y'
 
-class MyClient(discord.Client):
+
+# contains variables that multiple threads access
+class AppState:
+
+    def __init__(self):
+        self.quit = False
+        self.pause = False
+        self.names = []
+        self.speaker_indices = []
+        self._last_update_time = time.time() - DELAY
+
+
+class DicordClient(discord.Client):
+
+    def __init__(self, *args, state=None, **dargs):
+        assert state is not None
+        self.state = state
+
+        super().__init__(*args, **dargs)
 
     def _voice_channel_members(self):
         # returns the voice channel members of the voice channel the user is in in the GUILD
@@ -38,23 +56,22 @@ class MyClient(discord.Client):
         return results
 
     async def on_voice_state_update(self, member, before, after):
-        global names, speaker_indices, _last_update_time
 
-        if quit:
+        if self.state.quit:
             raise KeyboardInterrupt('quitting')
 
-        if pause:
+        if self.state.pause:
             return
 
         now = time.time()
-        if (now - _last_update_time) < DELAY:
+        if (now - self.state._last_update_time) < DELAY:
             return
-        _last_update_time = now
+        self.state._last_update_time = now
 
-        names = self.voice_channel_member_names()
-        speaker_indices = active_speaker_indices(self.voice_channel_member_avatars())
+        self.state.names = self.voice_channel_member_names()
+        self.state.speaker_indices = active_speaker_indices(self.voice_channel_member_avatars())
 
-        print(speaker_indices)
+        print(self.state.speaker_indices)
 
 
 @lru_cache(20)
@@ -67,18 +84,11 @@ def download_avatar_img(url):
     return img
 
 
-# global variables for communication between threads
-quit = False
-pause = False
-names = []
-speaker_indices = []
-_last_update_time = time.time() - DELAY
 
-
-def discord_client_loop():
+def discord_client_loop(state):
     intents = discord.Intents.default()
     intents.members = True
-    discord_client = MyClient(intents=intents)
+    discord_client = DicordClient(intents=intents, state=state)
 
     discord_client_loop = asyncio.get_event_loop()
     discord_client_loop.create_task(discord_client.start(TOKEN, bot=False))
@@ -135,8 +145,10 @@ class NameOverlay(wx.Frame):
 
 class Root(wx.Frame):
     # root gui element that is invisible and controls the NameOverlays
-    def __init__(self):
+    def __init__(self, state):
         wx.Frame.__init__(self, None)
+
+        self.state = state
         
         self.overlays_by_name = dict()
         self.active_speakers = []
@@ -145,22 +157,21 @@ class Root(wx.Frame):
     def on_timer(self):
 
         if keyboard.is_pressed(PAUSE_HOTKEY):
-            global pause
-            pause = not pause
-            print('pause = ', pause)
+            self.state.pause = not self.state.pause
+            print('pause = ', self.state.pause)
             
-            if pause:
+            if self.state.pause:
                 for overlay in self.overlays_by_name.values():
                     overlay.Hide()
             else:
                 for overlay in self.overlays_by_name.values():
                     overlay.Show()
 
-        if not pause:
+        if not self.state.pause:
             self.update_overlay_presences()
             self.update_overlay_highlight_states()
             
-        if not quit:
+        if not self.state.quit:
             wx.CallLater(500, self.on_timer)
         else:
             wx.Exit()
@@ -169,20 +180,20 @@ class Root(wx.Frame):
         prev_names = list(self.overlays_by_name.keys())
 
         # add, remove overlays based on names
-        if set(names) != set(self.overlays_by_name.keys()):
+        if set(self.state.names) != set(self.overlays_by_name.keys()):
             # add overlays for new names
-            new_names = set(names) - set(prev_names)
+            new_names = set(self.state.names) - set(prev_names)
             for name in new_names:
                 self.overlays_by_name[name] = NameOverlay(text=name)
 
             # remove overlays for gone names
-            gone_names = set(prev_names) - set(names)
+            gone_names = set(prev_names) - set(self.state.names)
             for name in gone_names:
                 self.overlays_by_name[name].Close()
                 del self.overlays_by_name[name]
 
     def update_overlay_highlight_states(self):
-        speaker_names = [names[speaker_idx] for speaker_idx in speaker_indices]
+        speaker_names = [self.state.names[speaker_idx] for speaker_idx in self.state.speaker_indices]
         non_speaker_names = set(self.overlays_by_name.keys()) - set(speaker_names)
         for name in speaker_names:
             self.overlays_by_name[name].highlight()
@@ -190,16 +201,16 @@ class Root(wx.Frame):
             self.overlays_by_name[name].dehighlight()
 
 
-def gui_loop():
+def gui_loop(state):
     app = wx.App()
-    root = Root()
+    root = Root(state)
     app.MainLoop()
 
 
-def setup():
+def setup(state):
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
-    future1 = executor.submit(gui_loop)
-    future2 = executor.submit(discord_client_loop().run_forever())
+    future1 = executor.submit(gui_loop, state)
+    future2 = executor.submit(discord_client_loop(state).run_forever())
     
     # main thread must be doing "work" to be able to catch a Ctrl+C 
     while not future1.done() and future2.done():
@@ -207,7 +218,10 @@ def setup():
 
         
 if __name__ == '__main__':
+
+    
+    state = AppState()
     try:
-        setup()
+        setup(state)
     except KeyboardInterrupt:
-        quit = True
+        state.quit = True
