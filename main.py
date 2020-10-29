@@ -15,8 +15,8 @@ from overlay_monitor import active_speaker_indices
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 GUILD = 'Test' # guild where the voice channel that will be checked is (it could be better to check in which guild
 # the user is in a voice_channel as he only can be in one
-DELAY = 4 # delay between updating the global variables by the discord_client_loop
-PAUSE_HOTKEY = 'ctrl+alt+y'
+DELAY = 1 # delay between updating the global variables by the discord_client_loop
+PAUSE_HOTKEY = 'ctrl+<'
 
 
 # contains variables that multiple threads access
@@ -71,7 +71,8 @@ class DicordClient(discord.Client):
         self.state.names = self.voice_channel_member_names()
         self.state.speaker_indices = active_speaker_indices(self.voice_channel_member_avatars())
 
-        print(self.state.speaker_indices)
+        if self.state.speaker_indices:
+            print(self.state.speaker_indices)
 
 
 @lru_cache(20)
