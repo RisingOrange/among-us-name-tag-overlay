@@ -51,6 +51,7 @@ class NameOverlay(wx.Frame):
         self._dragStartPos = self.GetPosition()
 
         self.drag_img.BeginDrag((0, 0), self.st, fullScreen=True)
+        self.drag_img.Move(event.GetPosition())
         self.drag_img.Show()
 
     def on_left_up(self, event):
