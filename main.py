@@ -1,6 +1,7 @@
 import asyncio
 import multiprocessing as mp
 from functools import lru_cache
+from shaped_image import ShapedImage
 
 import cv2
 import discord
@@ -9,7 +10,8 @@ import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_indices
-from name_overlay import NameTag
+from game_meeting_screen import name_tag_slot_at, mouth_pos_for_slot
+from name_tag import NameTag
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
@@ -91,14 +93,18 @@ def run_dicord_client(state):
 
 
 class GuiRoot(wx.Frame):
+
+    MULTIPLE_NAMES = object()
+
     # root gui element that is invisible and controls the NameOverlays
     def __init__(self, state):
         wx.Frame.__init__(self, None)
 
         self.state = state
 
-        self.overlays_by_name = dict()
-        self.active_speakers = []
+        self._name_tags_by_name = dict()
+        self._mouths_by_name = dict()
+
         self._main()
 
     def _main(self):
@@ -108,14 +114,15 @@ class GuiRoot(wx.Frame):
             print('pause = ', self.state['pause'])
 
             if self.state['pause']:
-                for overlay in self.overlays_by_name.values():
+                for overlay in self._name_tags_by_name.values():
                     overlay.Hide()
             else:
-                for overlay in self.overlays_by_name.values():
+                for overlay in self._name_tags_by_name.values():
                     overlay.Show()
 
         if not self.state['pause']:
             self._update_name_tags()
+            self._update_mouths()
 
         if not self.state['quit']:
             # Call main again in 0.5 seconds
@@ -123,35 +130,95 @@ class GuiRoot(wx.Frame):
         else:
             wx.Exit()
 
+    def _update_mouths(self):
+        self._update_mouth_presence()  
+        self._update_mouth_visibility_and_positions()
+          
+    
+    def _update_mouth_visibility_and_positions(self):
+        
+        # show mouths next to name tags that contain one name tag of which the corresponding persons speaks
+        shown_mouths = set()
+        for slot, name in self._name_by_slot().items():
+            if name is self.MULTIPLE_NAMES or name not in self._speaker_names():
+                continue
+
+            mouth = self._mouths_by_name[name]
+
+            mouth.SetPosition(mouth_pos_for_slot(slot))
+            mouth.Show()
+            shown_mouths.add(mouth)
+
+        # hide other mouths
+        mouths_to_hide = set(self._mouths_by_name.values()) - shown_mouths
+        for mouth in mouths_to_hide:
+            mouth.Hide()
+
+    def _update_mouth_presence(self):
+        prev_names = list(self._mouths_by_name.keys())
+
+        # add, remove mouths based on names
+        if set(self.state['names']) != set(self._mouths_by_name.keys()):
+            # add mouths for new names
+            new_names = set(self.state['names']) - set(prev_names)
+            for name in new_names:
+                mouth = ShapedImage(None, 'images/mouth.png', (0, 0))
+                mouth.Hide()
+                self._mouths_by_name[name] = mouth
+                
+
+            # remove mouths for gone names
+            gone_names = set(prev_names) - set(self.state['names'])
+            for name in gone_names:
+                self._mouths_by_name[name].Destroy()
+                del self._mouths_by_name[name]
+            
+
+    def _name_by_slot(self):
+        result = dict()
+        for name, tag in self._name_tags_by_name.items():
+            slot = name_tag_slot_at(tag.GetPosition())
+            if slot is None:
+                continue
+            if result.get(slot, None) is None:
+                result[slot] = name
+            else:
+                result[slot] = self.MULTIPLE_NAMES
+        return result
+
+        
+
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
 
     def _update_name_tag_presences(self):
-        prev_names = list(self.overlays_by_name.keys())
+        prev_names = list(self._name_tags_by_name.keys())
 
         # add, remove overlays based on names
-        if set(self.state['names']) != set(self.overlays_by_name.keys()):
+        if set(self.state['names']) != set(self._name_tags_by_name.keys()):
             # add overlays for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                self.overlays_by_name[name] = NameTag(text=name)
+                self._name_tags_by_name[name] = NameTag(text=name)
 
             # remove overlays for gone names
             gone_names = set(prev_names) - set(self.state['names'])
             for name in gone_names:
-                self.overlays_by_name[name].Close()
-                del self.overlays_by_name[name]
+                self._name_tags_by_name[name].Close()
+                del self._name_tags_by_name[name]
 
     def _update_name_tag_highlight_states(self):
-        speaker_names = [self.state['names'][speaker_idx]
-                         for speaker_idx in self.state['speaker_indices']]
+        speaker_names = self._speaker_names()
         non_speaker_names = set(
-            self.overlays_by_name.keys()) - set(speaker_names)
+            self._name_tags_by_name.keys()) - set(speaker_names)
         for name in speaker_names:
-            self.overlays_by_name[name].highlight()
+            self._name_tags_by_name[name].highlight()
         for name in non_speaker_names:
-            self.overlays_by_name[name].dehighlight()
+            self._name_tags_by_name[name].dehighlight()
+
+    def _speaker_names(self):
+        return [self.state['names'][speaker_idx] for speaker_idx in self.state['speaker_indices']]
 
 
 def run_gui(state):
