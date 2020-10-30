@@ -14,7 +14,7 @@ from name_tag import NameTag
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
-GUILD = 'Test'
+
 # the user is in a voice_channel as he only can be in one
 DISCORD_LOOP_DELAY = 1  # seconds between updating the global variables by the discord_client_loop
 GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
@@ -33,14 +33,25 @@ class DicordClient(discord.Client):
 
         super().__init__(*args, **dargs)
 
+        self._last_recent_channel = None
+
         self.loop.create_task(self.main())
 
     def _voice_channel_members(self):
         # returns the voice channel members of the voice channel the user is in in the GUILD
-        guild = next(guild for guild in self.guilds if guild.name == GUILD)
-        me_as_member = guild.get_member(self.user.id)
-        voice_channel = me_as_member.voice.channel
-        return voice_channel.members
+
+        # first check if self.user stayed in the same voice_channel
+        if (self._last_recent_channel is not None and 
+            self.user.id in [m.id for m in self._last_recent_channel.members]):
+            return self._last_recent_channel.members
+
+        # ... else search all visivle voice_channels in all visible guilds
+        for guild in self.guilds:
+            for channel in guild.voice_channels:
+                for member in channel.members:
+                    if member.id == self.user.id:
+                        return channel.members
+        return []
 
     def _voice_channel_member_names(self):
         return [member.name for member in self._voice_channel_members()]
@@ -89,6 +100,7 @@ def download_avatar_img(url):
 
 def run_dicord_client(state):
     intents = discord.Intents.default()
+    intents.guilds = True
     intents.members = True
     discord_client = DicordClient(intents=intents, state=state)
 
