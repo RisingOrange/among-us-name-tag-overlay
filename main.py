@@ -21,6 +21,9 @@ DELAY = 1  # delay between updating the global variables by the discord_client_l
 PAUSE_HOTKEY = 'ctrl+<'
 
 
+EVERYONE_ALWAYS_SPEAKS_TEST_MODE = True
+
+
 class DicordClient(discord.Client):
     # connects to discord and updates the app state every DELAY seconds
 
@@ -218,6 +221,8 @@ class GuiRoot(wx.Frame):
             self._name_tags_by_name[name].dehighlight()
 
     def _speaker_names(self):
+        if EVERYONE_ALWAYS_SPEAKS_TEST_MODE:
+            return self.state['names']
         return [self.state['names'][speaker_idx] for speaker_idx in self.state['speaker_indices']]
 
 
