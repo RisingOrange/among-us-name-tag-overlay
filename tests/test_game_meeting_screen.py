@@ -27,17 +27,5 @@ class TestGameMeetingScreen(unittest.TestCase):
         )
         self.assertEqual(slot_by_rect_idx[9], last_slot_rect_should_be)
 
-    def test_mouth_pos_for_slot(self):
-        self.assertEqual(gms.mouth_pos_for_slot(0), gms.POS_OF_FIST_MOUTH)
-
-        _, _, _, rh = gms.RECT_OF_FIRST_SLOT
-        x1, y1 = gms.POS_OF_FIST_MOUTH
-        mouth_idx_2_should_be = (
-            x1,
-            y1 + rh + gms.SLOTS_VERTICAL_DISTANCE
-        )
-        self.assertEqual(gms.mouth_pos_for_slot(2), mouth_idx_2_should_be)
-
-
 if __name__ == '__main__':
     unittest.main()

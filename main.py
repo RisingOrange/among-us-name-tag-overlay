@@ -1,7 +1,6 @@
 import asyncio
 import multiprocessing as mp
 from functools import lru_cache
-from shaped_image import ShapedImage
 
 import cv2
 import discord
@@ -10,7 +9,7 @@ import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_indices
-from game_meeting_screen import slot_rect_by_idx, name_tag_slot_at, mouth_pos_for_slot
+from game_meeting_screen import slot_rect_by_idx, name_tag_slot_at
 from name_tag import NameTag
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
@@ -20,8 +19,6 @@ GUILD = 'Test'
 DISCORD_LOOP_DELAY = 1  # seconds between updating the global variables by the discord_client_loop
 GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
 PAUSE_HOTKEY = 'ctrl+<'
-
-MOUTH_IMAGE_PATH = 'images/exclamation_mark.gif'
 
 
 EVERYONE_ALWAYS_SPEAKS_TEST_MODE = True
@@ -110,7 +107,6 @@ class GuiRoot(wx.Frame):
         self.state = state
 
         self._name_tags_by_name = dict()
-        self._mouths_by_name = dict()
 
         self._main()
 
@@ -121,7 +117,7 @@ class GuiRoot(wx.Frame):
             print('pause = ', self.state['pause'])
 
             if self.state['pause']:
-                for element in [*self._name_tags_by_name.values(), *self._mouths_by_name.values()]:
+                for element in self._name_tags_by_name.values():
                     element.Hide()
             else:
                 for element in self._name_tags_by_name.values():
@@ -129,58 +125,13 @@ class GuiRoot(wx.Frame):
 
         if not self.state['pause']:
             self._update_name_tags()
-            self._update_mouths()
 
         if not self.state['quit']:
             # Call main again in 0.5 seconds
             wx.CallLater(GUI_LOOP_DELAY*1000, self._main)
         else:
-            wx.Exit()
-
-    def _update_mouths(self):
-        self._update_mouth_presence()  
-        self._update_mouth_visibility_and_positions()
-          
+            wx.Exit()    
     
-    def _update_mouth_visibility_and_positions(self):
-        
-        # show mouths next to name tags that contain one name tag of which the corresponding persons speaks
-        shown_mouths = set()
-        for slot, name in self._names_by_slot().items():
-            if name is self.MULTIPLE_NAMES or name not in self._speaker_names():
-                continue
-
-            mouth = self._mouths_by_name[name]
-
-            mouth.SetPosition(mouth_pos_for_slot(slot))
-            mouth.Show()
-            shown_mouths.add(mouth)
-
-        # hide other mouths
-        mouths_to_hide = set(self._mouths_by_name.values()) - shown_mouths
-        for mouth in mouths_to_hide:
-            mouth.Hide()
-
-    def _update_mouth_presence(self):
-        prev_names = list(self._mouths_by_name.keys())
-
-        # add, remove mouths based on names
-        if set(self.state['names']) != set(self._mouths_by_name.keys()):
-            # add mouths for new names
-            new_names = set(self.state['names']) - set(prev_names)
-            for name in new_names:
-                mouth = ShapedImage(None, MOUTH_IMAGE_PATH, (0, 0))
-                mouth.Hide()
-                self._mouths_by_name[name] = mouth
-                
-
-            # remove mouths for gone names
-            gone_names = set(prev_names) - set(self.state['names'])
-            for name in gone_names:
-                self._mouths_by_name[name].Destroy()
-                del self._mouths_by_name[name]
-            
-
     def _names_by_slot(self):
         result = dict()
         for name, tag in self._name_tags_by_name.items():
