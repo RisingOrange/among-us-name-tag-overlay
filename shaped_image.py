@@ -37,5 +37,5 @@ class ShapedImage(wx.Frame):
 
 if __name__ == '__main__':
     app = wx.App()
-    img = ShapedImage(None, 'mouth.png', (100, 100))
+    img = ShapedImage(None, 'images/mouth.png', (350, 303))
     app.MainLoop()
