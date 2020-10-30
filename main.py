@@ -118,11 +118,11 @@ class GuiRoot(wx.Frame):
             print('pause = ', self.state['pause'])
 
             if self.state['pause']:
-                for overlay in self._name_tags_by_name.values():
-                    overlay.Hide()
+                for element in [*self._name_tags_by_name.values(), *self._mouths_by_name.values()]:
+                    element.Hide()
             else:
-                for overlay in self._name_tags_by_name.values():
-                    overlay.Show()
+                for element in self._name_tags_by_name.values():
+                    element.Show()
 
         if not self.state['pause']:
             self._update_name_tags()
