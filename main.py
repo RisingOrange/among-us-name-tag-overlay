@@ -21,7 +21,7 @@ GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
 PAUSE_HOTKEY = 'ctrl+<'
 
 
-EVERYONE_ALWAYS_SPEAKS_TEST_MODE = True
+EVERYONE_ALWAYS_SPEAKS_TEST_MODE = False
 
 
 class DicordClient(discord.Client):
@@ -82,9 +82,6 @@ class DicordClient(discord.Client):
             self.state['speaker_indices'] = active_speaker_indices(
                 self._voice_channel_member_avatars())
 
-            if self.state['speaker_indices']:
-                print(self.state['speaker_indices'])
-
             await asyncio.sleep(DISCORD_LOOP_DELAY)
 
 
@@ -139,7 +136,6 @@ class GuiRoot(wx.Frame):
             self._update_name_tags()
 
         if not self.state['quit']:
-            # Call main again in 0.5 seconds
             wx.CallLater(GUI_LOOP_DELAY*1000, self._main)
         else:
             wx.Exit()    
@@ -210,7 +206,7 @@ class GuiRoot(wx.Frame):
 
 def run_gui(state):
     app = wx.App()
-    root = GuiRoot(state)
+    GuiRoot(state)
     app.MainLoop()
 
 
