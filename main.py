@@ -21,7 +21,7 @@ DISCORD_LOOP_DELAY = 1  # seconds between updating the global variables by the d
 GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
 PAUSE_HOTKEY = 'ctrl+<'
 
-MOUTH_IMAGE_PATH = 'images/exclamation_mark.gif'
+MOUTH_IMAGE_PATH = 'images/mouth.png'
 
 
 EVERYONE_ALWAYS_SPEAKS_TEST_MODE = True
