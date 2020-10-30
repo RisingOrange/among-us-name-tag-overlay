@@ -5,6 +5,8 @@ SLOTS_HORIZONTAL_DISTANCE = 30
 SLOTS_VERTICAL_DISTANCE = 25
 SLOT_AMOUNT = 10
 
+POS_OF_FIST_MOUTH = (370, 316)
+
 
 def name_tag_slot_at(position):
     # returns the idx of the name tag slot at the position or None if there is no slot there
@@ -53,8 +55,18 @@ def _slot_rect_by_idx():
     }
     
 
-
-
 def mouth_pos_for_slot(slot_idx):
     # returns position for the bean mouth corresponding to the slot
-    pass
+    vector_from_rect_to_mouth = (
+        POS_OF_FIST_MOUTH[0] - RECT_OF_FIRST_SLOT[0],
+        POS_OF_FIST_MOUTH[1] - RECT_OF_FIRST_SLOT[1],
+    )
+    rx, ry, _, _ = _slot_rect_by_idx()[slot_idx]
+    dx, dy = vector_from_rect_to_mouth
+    return (
+        rx + dx,
+        ry + dy
+    )
+    
+    
+
