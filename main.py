@@ -167,7 +167,7 @@ class GuiRoot(wx.Frame):
             name_tag = self._name_tags_by_name[name]
             x, y, w, h = slot_rect_by_idx()[slot]
             snap_pos = (
-                x + w // 2,
+                x + w // 2 - 100,
                 y + h // 2
             )
             name_tag.SetPosition(snap_pos)
