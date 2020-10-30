@@ -97,6 +97,7 @@ def run_dicord_client(state):
 
 class GuiRoot(wx.Frame):
 
+    # sentinel value to signal that a slot contains multiple names
     MULTIPLE_NAMES = object()
 
     # root gui element that is invisible and controls the NameOverlays
@@ -142,7 +143,7 @@ class GuiRoot(wx.Frame):
         
         # show mouths next to name tags that contain one name tag of which the corresponding persons speaks
         shown_mouths = set()
-        for slot, name in self._name_by_slot().items():
+        for slot, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES or name not in self._speaker_names():
                 continue
 
@@ -177,7 +178,7 @@ class GuiRoot(wx.Frame):
                 del self._mouths_by_name[name]
             
 
-    def _name_by_slot(self):
+    def _names_by_slot(self):
         result = dict()
         for name, tag in self._name_tags_by_name.items():
             slot = name_tag_slot_at(tag.GetPosition())
