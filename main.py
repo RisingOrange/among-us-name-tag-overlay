@@ -10,15 +10,18 @@ import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_indices
-from game_meeting_screen import name_tag_slot_at, mouth_pos_for_slot
+from game_meeting_screen import slot_rect_by_idx, name_tag_slot_at, mouth_pos_for_slot
 from name_tag import NameTag
 
 TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
 GUILD = 'Test'
 # the user is in a voice_channel as he only can be in one
-DELAY = 1  # delay between updating the global variables by the discord_client_loop
+DISCORD_LOOP_DELAY = 1  # seconds between updating the global variables by the discord_client_loop
+GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
 PAUSE_HOTKEY = 'ctrl+<'
+
+MOUTH_IMAGE_PATH = 'images/exclamation_mark.gif'
 
 
 EVERYONE_ALWAYS_SPEAKS_TEST_MODE = True
@@ -74,7 +77,7 @@ class DicordClient(discord.Client):
             if self.state['speaker_indices']:
                 print(self.state['speaker_indices'])
 
-            await asyncio.sleep(DELAY)
+            await asyncio.sleep(DISCORD_LOOP_DELAY)
 
 
 @lru_cache(20)
@@ -130,7 +133,7 @@ class GuiRoot(wx.Frame):
 
         if not self.state['quit']:
             # Call main again in 0.5 seconds
-            wx.CallLater(500, self._main)
+            wx.CallLater(GUI_LOOP_DELAY*1000, self._main)
         else:
             wx.Exit()
 
@@ -166,7 +169,7 @@ class GuiRoot(wx.Frame):
             # add mouths for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                mouth = ShapedImage(None, 'images/mouth.png', (0, 0))
+                mouth = ShapedImage(None, MOUTH_IMAGE_PATH, (0, 0))
                 mouth.Hide()
                 self._mouths_by_name[name] = mouth
                 
@@ -195,6 +198,21 @@ class GuiRoot(wx.Frame):
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
+        self._snap_name_tags_to_slots()
+
+    def _snap_name_tags_to_slots(self):
+        # set the position of nametags that are alone in their slot to the slot center
+        for slot, name in self._names_by_slot().items():
+            if name is self.MULTIPLE_NAMES:
+                continue
+            name_tag = self._name_tags_by_name[name]
+            x, y, w, h = slot_rect_by_idx()[slot]
+            snap_pos = (
+                x + w // 2,
+                y + h // 2
+            )
+            name_tag.SetPosition(snap_pos)
+
 
     def _update_name_tag_presences(self):
         prev_names = list(self._name_tags_by_name.keys())

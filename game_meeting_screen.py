@@ -10,7 +10,7 @@ POS_OF_FIST_MOUTH = (370, 316)
 
 def name_tag_slot_at(position):
     # returns the idx of the name tag slot at the position or None if there is no slot there
-    for slot_idx, slot_rect in _slot_rect_by_idx().items():
+    for slot_idx, slot_rect in slot_rect_by_idx().items():
         if _is_inside_rect(position, slot_rect):
             return slot_idx
     return None
@@ -23,7 +23,7 @@ def _is_inside_rect(position, rect):
         ry <= y <= (ry+rh)
     )
 
-def _slot_rect_by_idx():
+def slot_rect_by_idx():
     amount_slots_in_first_col = math.ceil(SLOT_AMOUNT / 2)
 
     x1, y1, w, h = RECT_OF_FIRST_SLOT
@@ -61,7 +61,7 @@ def mouth_pos_for_slot(slot_idx):
         POS_OF_FIST_MOUTH[0] - RECT_OF_FIRST_SLOT[0],
         POS_OF_FIST_MOUTH[1] - RECT_OF_FIRST_SLOT[1],
     )
-    rx, ry, _, _ = _slot_rect_by_idx()[slot_idx]
+    rx, ry, _, _ = slot_rect_by_idx()[slot_idx]
     dx, dy = vector_from_rect_to_mouth
     return (
         rx + dx,

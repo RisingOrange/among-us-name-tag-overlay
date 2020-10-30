@@ -14,7 +14,7 @@ class TestGameMeetingScreen(unittest.TestCase):
         # pprint.pprint(gms._slot_rect_by_idx())
 
         # check fist slot rect
-        slot_by_rect_idx = gms._slot_rect_by_idx()
+        slot_by_rect_idx = gms.slot_rect_by_idx()
         self.assertEqual(slot_by_rect_idx[0], gms.RECT_OF_FIRST_SLOT)
 
         # check last slot rect

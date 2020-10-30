@@ -4,3 +4,4 @@ __pycache__/*
 *.prof
 experiments/*
 tests/__pycache__/*
+images/*
