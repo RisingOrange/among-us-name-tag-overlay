@@ -29,12 +29,12 @@ def active_speaker_names(names, avatars):
     screenshot_img = screenshot()
 
     results = []
-    for i, name_and_avatar in enumerate(sorted_names_and_avatars(names, avatars)):
+    for row_idx, name_and_avatar in enumerate(sorted_names_and_avatars(names, avatars)):
         name, avatar = name_and_avatar
 
         # calculate the region where the avatar is (possibly highlighted) based on its index
         cropped = screenshot_img[
-            (OVERLAY_Y + i*OVERLAY_ROWS_HEIGHT_AND_DISTANCE) : (OVERLAY_Y + (i+1)*OVERLAY_ROWS_HEIGHT_AND_DISTANCE), 
+            (OVERLAY_Y + row_idx*OVERLAY_ROWS_HEIGHT_AND_DISTANCE) : (OVERLAY_Y + (row_idx+1)*OVERLAY_ROWS_HEIGHT_AND_DISTANCE), 
             OVERLAY_X : 100
         ]
 
