@@ -12,7 +12,7 @@ from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import name_tag_slot_at, slot_rect_by_idx
 from name_tag import NameTag
 
-TOKEN = 'mfa.V3ex5TzBc2Nz90G4Td9F-I9yQvO6Sf5eoGDgUSpsMTSb5kCPG-8ZrvUOllmpLH6vM84yAFwYQFcY97N46ggz'
+TOKEN = 'mfa.K-ayHH1DK8lL6hy68H01VMQhjVR9FANtnT7BoP6tRFGrP8MtaAtTyhLnqcLfjlxizrFS9iwcJtWA2L7ZCHiW'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
 
 # the user is in a voice_channel as he only can be in one
@@ -76,7 +76,8 @@ class DicordClient(discord.Client):
                 raise KeyboardInterrupt('quitting')
 
             if self.state['pause']:
-                return
+                await asyncio.sleep(DISCORD_LOOP_DELAY)
+                continue
 
             self.state['names'] = self._voice_channel_member_names()
             self.state['speaker_names'] = active_speaker_names(
