@@ -158,7 +158,6 @@ class GuiRoot(wx.Frame):
         return result
 
         
-
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
@@ -186,7 +185,9 @@ class GuiRoot(wx.Frame):
             # add overlays for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                self._name_tags_by_name[name] = NameTag(text=name)
+                # assign name tag to name and move it away from the overlay
+                self._name_tags_by_name[name] = NameTag(text=name)  
+                self._name_tags_by_name[name].SetPosition((300, 0))
 
             # remove overlays for gone names
             gone_names = set(prev_names) - set(self.state['names'])
