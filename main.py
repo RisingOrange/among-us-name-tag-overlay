@@ -8,11 +8,11 @@ import keyboard
 import requests
 import wx
 
-from discord_overlay_monitor import active_speaker_indices
-from game_meeting_screen import slot_rect_by_idx, name_tag_slot_at
+from discord_overlay_monitor import active_speaker_names
+from game_meeting_screen import name_tag_slot_at, slot_rect_by_idx
 from name_tag import NameTag
 
-TOKEN = 'Mjg1ODg0OTgwNjQxNjYwOTI5.X5gJnw.GeideTTZykXP0vuioYgo5kTLGA0'
+TOKEN = 'mfa.V3ex5TzBc2Nz90G4Td9F-I9yQvO6Sf5eoGDgUSpsMTSb5kCPG-8ZrvUOllmpLH6vM84yAFwYQFcY97N46ggz'
 # guild where the voice channel that will be checked is (it could be better to check in which guild
 
 # the user is in a voice_channel as he only can be in one
@@ -79,8 +79,12 @@ class DicordClient(discord.Client):
                 return
 
             self.state['names'] = self._voice_channel_member_names()
-            self.state['speaker_indices'] = active_speaker_indices(
+            self.state['speaker_names'] = active_speaker_names(
+                self._voice_channel_member_names(),
                 self._voice_channel_member_avatars())
+
+            if self.state['speaker_names']:
+                print(self.state['speaker_names'], 'are speaking now')
 
             await asyncio.sleep(DISCORD_LOOP_DELAY)
 
@@ -190,18 +194,14 @@ class GuiRoot(wx.Frame):
                 del self._name_tags_by_name[name]
 
     def _update_name_tag_highlight_states(self):
-        speaker_names = self._speaker_names()
+        speaker_names = self.state['speaker_names']
         non_speaker_names = set(
             self._name_tags_by_name.keys()) - set(speaker_names)
+
         for name in speaker_names:
             self._name_tags_by_name[name].highlight()
         for name in non_speaker_names:
             self._name_tags_by_name[name].dehighlight()
-
-    def _speaker_names(self):
-        if EVERYONE_ALWAYS_SPEAKS_TEST_MODE:
-            return self.state['names']
-        return [self.state['names'][speaker_idx] for speaker_idx in self.state['speaker_indices']]
 
 
 def run_gui(state):
@@ -232,7 +232,7 @@ if __name__ == '__main__':
     state['quit'] = False
     state['pause'] = False
     state['names'] = []
-    state['speaker_indices'] = []
+    state['speaker_names'] = []
 
     try:
         setup(state)
