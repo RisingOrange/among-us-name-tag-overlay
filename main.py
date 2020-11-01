@@ -1,4 +1,5 @@
 import asyncio
+import configparser
 import multiprocessing as mp
 from functools import lru_cache
 
@@ -12,13 +13,9 @@ from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import name_tag_slot_at, slot_rect_by_idx
 from name_tag import NameTag
 
-TOKEN = 'mfa.K-ayHH1DK8lL6hy68H01VMQhjVR9FANtnT7BoP6tRFGrP8MtaAtTyhLnqcLfjlxizrFS9iwcJtWA2L7ZCHiW'
-# guild where the voice channel that will be checked is (it could be better to check in which guild
-
-# the user is in a voice_channel as he only can be in one
-DISCORD_LOOP_DELAY = 1  # seconds between updating the global variables by the discord_client_loop
-GUI_LOOP_DELAY = 0.1 # seconds between running gui updates based on the data
-PAUSE_HOTKEY = 'ctrl+<'
+config = configparser.ConfigParser()
+config.read('config.ini')
+config = config['DEFAULT']
 
 
 EVERYONE_ALWAYS_SPEAKS_TEST_MODE = False
@@ -75,19 +72,17 @@ class DicordClient(discord.Client):
             if self.state['quit']:
                 raise KeyboardInterrupt('quitting')
 
-            if self.state['pause']:
-                await asyncio.sleep(DISCORD_LOOP_DELAY)
-                continue
+            if not self.state['pause']:
 
-            self.state['names'] = self._voice_channel_member_names()
-            self.state['speaker_names'] = active_speaker_names(
-                self._voice_channel_member_names(),
-                self._voice_channel_member_avatars())
+                self.state['names'] = self._voice_channel_member_names()
+                self.state['speaker_names'] = active_speaker_names(
+                    self._voice_channel_member_names(),
+                    self._voice_channel_member_avatars())
 
-            if self.state['speaker_names']:
-                print(self.state['speaker_names'], 'are speaking now')
+                if self.state['speaker_names']:
+                    print(self.state['speaker_names'], 'are speaking now')
 
-            await asyncio.sleep(DISCORD_LOOP_DELAY)
+            await asyncio.sleep(config.getint('DISCORD_LOOP_DELAY_MS') / 1000.0)
 
 
 @lru_cache(20)
@@ -106,7 +101,7 @@ def run_dicord_client(state):
     intents.members = True
     discord_client = DicordClient(intents=intents, state=state)
 
-    discord_client.run(TOKEN, bot=False)
+    discord_client.run(config['DISCORD_TOKEN'], bot=False)
 
 
 class GuiRoot(wx.Frame):
@@ -126,7 +121,7 @@ class GuiRoot(wx.Frame):
 
     def _main(self):
 
-        if keyboard.is_pressed(PAUSE_HOTKEY):
+        if keyboard.is_pressed(config['PAUSE_HOTKEY']):
             self.state['pause'] = not self.state['pause']
             print('pause = ', self.state['pause'])
 
@@ -141,7 +136,7 @@ class GuiRoot(wx.Frame):
             self._update_name_tags()
 
         if not self.state['quit']:
-            wx.CallLater(GUI_LOOP_DELAY*1000, self._main)
+            wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
             wx.Exit()    
     
