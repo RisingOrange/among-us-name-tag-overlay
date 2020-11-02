@@ -15,8 +15,7 @@ class TestGameMeetingScreen(unittest.TestCase):
     def test_slot_rect_by_idx(self):
 
         # check fist slot rect
-        slot_by_rect_idx = gms.slot_rect_by_idx()
-        self.assertEqual(slot_by_rect_idx[0], gms.RECT_OF_FIRST_SLOT)
+        self.assertEqual(gms.slot_rect_by_idx(0), gms.RECT_OF_FIRST_SLOT)
 
         # check last slot rect
         x1, y1, w, h = gms.RECT_OF_FIRST_SLOT
@@ -26,7 +25,7 @@ class TestGameMeetingScreen(unittest.TestCase):
             w,
             h
         )
-        self.assertEqual(slot_by_rect_idx[9], last_slot_rect_should_be)
+        self.assertEqual(gms.slot_rect_by_idx(9), last_slot_rect_should_be)
 
     def test_slot_names_1(self):
         img = cv2.imread('images/screenshot_1.png')
