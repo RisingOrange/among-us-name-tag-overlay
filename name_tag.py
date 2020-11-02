@@ -1,15 +1,16 @@
 import wx
 
+
 class NameTag(wx.Frame):
     # a draggable overlay object that has a name on it and can be highlighted
     def __init__(self, *args, text=None, **dargs):
         assert text is not None
         self.text = text
 
-        style = ( wx.CLIP_CHILDREN | wx.STAY_ON_TOP | wx.FRAME_NO_TASKBAR |
-                  wx.NO_BORDER | wx.FRAME_SHAPED )
+        style = (wx.CLIP_CHILDREN | wx.STAY_ON_TOP | wx.FRAME_NO_TASKBAR |
+                 wx.NO_BORDER | wx.FRAME_SHAPED)
         wx.Frame.__init__(self, None, *args, **dargs, style=style)
-        
+
         self.SetTransparent(220)
 
         self.setup_text()
@@ -58,7 +59,7 @@ class NameTag(wx.Frame):
 
         self.st.SetForegroundColour(cur_colour)
         self.st.Refresh()
-        wx.CallLater(500, self.highlight, recursive_call=True)
+        wx.CallLater(300, self.highlight, recursive_call=True)
 
     def dehighlight(self):
         self._is_highlight_active = False
