@@ -10,7 +10,8 @@ import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_names
-from game_meeting_screen import name_tag_slot_at, slot_rect_by_idx
+from game_meeting_screen import (name_tag_slot_at, ocr_slot_names,
+                                 slot_pos_by_idx, slot_rect_by_idx)
 from name_tag import NameTag
 
 config = configparser.ConfigParser()
@@ -38,8 +39,8 @@ class DicordClient(discord.Client):
         # returns the voice channel members of the voice channel the user is in in the GUILD
 
         # first check if self.user stayed in the same voice_channel
-        if (self._last_recent_channel is not None and 
-            self.user.id in [m.id for m in self._last_recent_channel.members]):
+        if (self._last_recent_channel is not None and
+                self.user.id in [m.id for m in self._last_recent_channel.members]):
             return self._last_recent_channel.members
 
         # ... else search all visivle voice_channels in all visible guilds
@@ -117,6 +118,9 @@ class GuiRoot(wx.Frame):
 
         self._name_tags_by_name = dict()
 
+        self._name_to_slot_idx = dict()
+        self._just_created_name_to_slot = False
+
         self._main()
 
     def _main(self):
@@ -132,14 +136,70 @@ class GuiRoot(wx.Frame):
                 for element in self._name_tags_by_name.values():
                     element.Show()
 
+        # HACK when I was trying to move the tags right after generating name_to_slot,
+        # they sometimes stayed at the same place, that was probably because the generation
+        # of the mapping takes some time (ocr) and therefore blocks the gui process
+        # to do this the right way, the mappings generation should probably be delegated to another process
+        # ... here the mapping is used to move the tags (one iteration after their generation)
+        if self._just_created_name_to_slot:
+            self._just_created_name_to_slot = False
+            self._move_name_tags_to_matching_slots()
+        # ... here the mapping is generated
+        if keyboard.is_pressed(config['MOVE_TAGS_TO_MATCHING_SLOTS_HOTKEY']):
+            self._generate_name_to_slot()
+
         if not self.state['pause']:
             self._update_name_tags()
 
         if not self.state['quit']:
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
-            wx.Exit()    
-    
+            wx.Exit()
+
+    def _generate_name_to_slot(self):
+
+        def best_match(name, names, threshold=2):
+            score, match = max([
+                (match_score(x, name), x)
+                for x in names
+                if match_score(x, name) >= threshold
+            ], default=(None, None))
+
+            if score is None:
+                return None
+            elif score > 0:
+                return match
+            else:
+                return None
+
+        def match_score(a, b):
+            # length of longest common prefix
+            i = 0
+            while i < min(len(a), len(b)) and a[i] == b[i]:
+                i += 1
+            return i
+
+        # reset the mapping
+        self._name_to_slot_idx = dict()
+
+        # generate new mapping
+        print('starting generating mapping of names to slots...')
+        slot_names = [name.lower() for name in ocr_slot_names()]
+        print('slot_names:', slot_names)
+
+        for name in self._name_tags_by_name.keys():
+            match = best_match(name.lower(), slot_names)
+            if not match:
+                continue
+            self._name_to_slot_idx[name] = slot_names.index(match)
+
+        self._just_created_name_to_slot = True
+
+    def _move_name_tags_to_matching_slots(self):
+        for name, slot_idx in self._name_to_slot_idx.items():
+            slot_position = slot_pos_by_idx(slot_idx)
+            self._name_tags_by_name[name].SetPosition(slot_position)
+
     def _names_by_slot(self):
         result = dict()
         for name, tag in self._name_tags_by_name.items():
@@ -152,7 +212,6 @@ class GuiRoot(wx.Frame):
                 result[slot] = self.MULTIPLE_NAMES
         return result
 
-        
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
@@ -160,28 +219,28 @@ class GuiRoot(wx.Frame):
 
     def _snap_name_tags_to_slots(self):
         # set the position of nametags that are alone in their slot to the slot center
-        for slot, name in self._names_by_slot().items():
+        for slot_idx, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES:
                 continue
             name_tag = self._name_tags_by_name[name]
-            x, y, w, h = slot_rect_by_idx()[slot]
+            x, y, w, h = slot_rect_by_idx(slot_idx)
             snap_pos = (
                 x + w // 2 - 100,
                 y + h // 2
             )
             name_tag.SetPosition(snap_pos)
 
-
     def _update_name_tag_presences(self):
         prev_names = list(self._name_tags_by_name.keys())
 
         # add, remove overlays based on names
         if set(self.state['names']) != set(self._name_tags_by_name.keys()):
+
             # add overlays for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
                 # assign name tag to name and move it away from the overlay
-                self._name_tags_by_name[name] = NameTag(text=name)  
+                self._name_tags_by_name[name] = NameTag(text=name)
                 self._name_tags_by_name[name].SetPosition((300, 0))
 
             # remove overlays for gone names
