@@ -121,20 +121,15 @@ class GuiRoot(wx.Frame):
         self._name_to_slot_idx = dict()
         self._just_created_name_to_slot = False
 
+        self._name_to_colour = dict()
+
+        keyboard.add_hotkey(config['PAUSE_HOTKEY'], self._on_pause)
+        keyboard.add_hotkey(
+            config['MOVE_TAGS_TO_MATCHING_SLOTS_HOTKEY'], self._generate_name_to_slot)
+
         self._main()
 
     def _main(self):
-
-        if keyboard.is_pressed(config['PAUSE_HOTKEY']):
-            self.state['pause'] = not self.state['pause']
-            print('pause = ', self.state['pause'])
-
-            if self.state['pause']:
-                for element in self._name_tags_by_name.values():
-                    element.Hide()
-            else:
-                for element in self._name_tags_by_name.values():
-                    element.Show()
 
         # HACK when I was trying to move the tags right after generating name_to_slot,
         # they sometimes stayed at the same place, that was probably because the generation
@@ -144,9 +139,6 @@ class GuiRoot(wx.Frame):
         if self._just_created_name_to_slot:
             self._just_created_name_to_slot = False
             self._move_name_tags_to_matching_slots()
-        # ... here the mapping is generated
-        if keyboard.is_pressed(config['MOVE_TAGS_TO_MATCHING_SLOTS_HOTKEY']):
-            self._generate_name_to_slot()
 
         if not self.state['pause']:
             self._update_name_tags()
@@ -155,6 +147,17 @@ class GuiRoot(wx.Frame):
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
             wx.Exit()
+
+    def _on_pause(self):
+        self.state['pause'] = not self.state['pause']
+        print('pause = ', self.state['pause'])
+
+        if self.state['pause']:
+            for element in self._name_tags_by_name.values():
+                element.Hide()
+        else:
+            for element in self._name_tags_by_name.values():
+                element.Show()
 
     def _generate_name_to_slot(self):
 
