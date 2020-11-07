@@ -106,12 +106,12 @@ def _slot_names_from_img(img):
         nx, ny = sx+dx, sy+dy
 
         cropped = img[ny: ny+NAME_HEIGHT, nx: nx+NAME_WIDTH]
-        cv2.imwrite(f'cropped_names/{idx}.png', cropped)
-
         name = ocr_outline_font(cropped)
         name = name.lower()
-
         results.append(name)
+
+        if DEBUG_MODE:
+            cv2.imwrite(f'cropped_names/{idx}.png', cropped)
 
     return results
 
