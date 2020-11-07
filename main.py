@@ -123,7 +123,7 @@ class GuiRoot(wx.Frame):
 
         self._name_to_colour = dict()
 
-        keyboard.add_hotkey(config['PAUSE_HOTKEY'], self._on_pause)
+        keyboard.add_hotkey(config['PAUSE_HOTKEY'], self._on_pause_toggle)
         keyboard.add_hotkey(
             config['ARRANGE_TAGS_USING_OCR_HOTKEY'], self._ocr_name_to_slot_matching)
         keyboard.add_hotkey('ctrl+shift+j', self._save_name_to_colour_matching)
@@ -152,6 +152,8 @@ class GuiRoot(wx.Frame):
             wx.Exit()
 
     def _save_name_to_colour_matching(self):
+        self._name_to_colour = dict()
+
         colours = slot_colours()
         for slot_idx, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES:
@@ -167,14 +169,16 @@ class GuiRoot(wx.Frame):
             pos = slot_pos_by_idx(colours.index(colour))
             self._name_tags_by_name[name].SetPosition(pos)
 
-    def _on_pause(self):
+    def _on_pause_toggle(self):
         self.state['pause'] = not self.state['pause']
         print('pause = ', self.state['pause'])
 
         if self.state['pause']:
+            self._save_name_to_colour_matching()
             for element in self._name_tags_by_name.values():
                 element.Hide()
         else:
+            self._restore_name_to_colour_matching()
             for element in self._name_tags_by_name.values():
                 element.Show()
 
