@@ -41,14 +41,16 @@ class TestGameMeetingScreen(unittest.TestCase):
     #         'felix jakub sandy minz naveen baumi noah abdulla crewamate'.split() + ['' for _ in range(3)]
     #     )
 
-    def test_slot_colours(self):
+    def test_slot_colours_1(self):
         img = cv2.imread('images/screenshot_1.png')
         retrieved_colours = gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, ['white', 'red', 'blue', 'dark-green', 'pink', 'orange', 'yellow'])
 
+    def test_slot_colours_2(self):
         img = cv2.imread('images/screenshot_2.png')
         retrieved_colours = gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, ['brown', 'white', 'yellow', 'red', 'orange', 'light-green'])
+
 
     def test_active_slots_amount(self):
         img = cv2.imread('images/screenshot_1.png')

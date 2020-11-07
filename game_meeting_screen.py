@@ -17,20 +17,20 @@ NAME_WIDTH = 300
 NAME_HEIGHT = 53
 
 VECTOR_FROM_SLOT_TO_NAME = (120, 0)
-VECTOR_FROM_SLOT_TO_COLOUR_SPOT = (70, 80)
+VECTOR_FROM_SLOT_TO_COLOUR_SPOT = (28, 75)
 VECTOR_FROM_SLOT_TO_PRESENCE_CHECK_SPOT = (1, 50)
 
-BGR_TO_COLOUR_NAME = {
-    (81, 107, 132): 'brown',
-    (238, 218, 202): 'white',
-    (124, 237, 232): 'yellow',
-    (72,  66, 194): 'red',
-    (74, 138, 207): 'orange',
-    (107, 229, 110): 'light-green',
-    (216,  87,  61): 'blue',
-    (94, 148,  60): 'dark-green',
-    (187, 111, 209): 'pink',
-    (60, 70, 77): 'black',  # black was not tested yet
+BGR_TO_COLOUR_NAME = { # cyan is missing
+    (75, 80, 116): 'brown',
+    (203, 164, 145): 'white',
+    (83, 152, 188): 'yellow',
+    (100, 57, 134): 'red',
+    (76, 99, 181): 'orange',
+    (117, 163, 81): 'light-green',
+    (165, 69, 54): 'blue',
+    (94, 111, 54): 'dark-green',
+    (186, 83, 170): 'pink',
+    (88, 76, 69): 'black',
 }
 
 
@@ -136,7 +136,7 @@ def _slot_colours_from_img(img):
         results.append(colour_name)
 
         if DEBUG_MODE:
-            print(x, y, img[y, x], colour_name)
+            print(x, y, tuple(img[y, x]), colour_name)
 
     return results
 
