@@ -138,7 +138,7 @@ class GuiRoot(wx.Frame):
         # ... here the mapping is used to move the tags (one iteration after their generation)
         if self._just_ocrd_name_to_slot:
             self._just_ocrd_name_to_slot = False
-            self._move_name_tags_to_matching_slots()
+            self._arrange_tags_based_on_ocrd_name_to_slot_matching()
 
         if not self.state['pause']:
             self._update_name_tags()
@@ -147,51 +147,6 @@ class GuiRoot(wx.Frame):
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
             wx.Exit()
-
-    def _save_name_to_colour_matching(self):
-        self._name_to_colour = dict()
-
-        colours = slot_colours()
-        for slot_idx, name in self._names_by_slot().items():
-            if name is self.MULTIPLE_NAMES:
-                continue
-            # XXX don't know why the check is needed but without it there were IndexErrors sometimes
-            if slot_idx < len(colours): 
-                self._name_to_colour[name] = colours[slot_idx]
-        print(self._name_to_colour)
-
-    def _restore_name_to_colour_matching(self):
-        colours = slot_colours()
-        for name, colour in self._name_to_colour.items():
-            if colour in colours:
-                pos = slot_pos_by_idx(colours.index(colour))
-            else:
-                pos = self._get_next_free_ledge_position_for_tag(name)
-            self._name_tags_by_name[name].SetPosition(pos)
-
-    def _get_next_free_ledge_position_for_tag(self, name):
-        STEP = 20
-
-        other_tag_rects = [
-            self._name_tags_by_name[name].GetRect()
-            for name in set(self._name_tags_by_name.keys()) - set([name])
-        ]
-
-        ledge_rect = wx.Rect(*LEDGE_RECT)
-        cur_rect = self._name_tags_by_name[name].GetRect()
-
-        cur_rect.topLeft = ledge_rect.topLeft
-        while ledge_rect.Contains(cur_rect.bottomLeft):
-            if not any(cur_rect.Intersects(other_tag_rect) for other_tag_rect in other_tag_rects):
-                return cur_rect.topLeft
-            cur_rect.Left += STEP
-            if cur_rect.Left > ledge_rect.Right:
-                cur_rect.Left = ledge_rect.Left
-                cur_rect.Top += STEP
-
-        # it's not that important that it is not overlapping, it's probably not worth a crash
-        print('didn\'t find a free spot on the ledge, returning default value')
-        return LEDGE_RECT.topLeft
 
     def _on_pause_toggle(self):
         self.state['pause'] = not self.state['pause']
@@ -206,6 +161,29 @@ class GuiRoot(wx.Frame):
             for element in self._name_tags_by_name.values():
                 element.Show()
 
+    # save/restore name-to-colour-matching of tags
+    def _save_name_to_colour_matching(self):
+        self._name_to_colour = dict()
+
+        colours = slot_colours()
+        for slot_idx, name in self._names_by_slot().items():
+            if name is self.MULTIPLE_NAMES:
+                continue
+            # XXX don't know why the check is needed but without it there were IndexErrors sometimes
+            if slot_idx < len(colours):
+                self._name_to_colour[name] = colours[slot_idx]
+        print(self._name_to_colour)
+
+    def _restore_name_to_colour_matching(self):
+        colours = slot_colours()
+        for name, colour in self._name_to_colour.items():
+            if colour in colours:
+                pos = slot_pos_by_idx(colours.index(colour))
+            else:
+                pos = self._get_next_free_ledge_position_for_tag(name)
+            self._name_tags_by_name[name].SetPosition(pos)
+
+    # match and arrange tags to slots using OCR
     def _ocr_name_to_slot_matching(self):
 
         def best_match(name, names, threshold=2):
@@ -245,40 +223,16 @@ class GuiRoot(wx.Frame):
 
         self._just_ocrd_name_to_slot = True
 
-    def _move_name_tags_to_matching_slots(self):
+    def _arrange_tags_based_on_ocrd_name_to_slot_matching(self):
         for name, slot_idx in self._ocrd_name_to_slot_idx.items():
             slot_position = slot_pos_by_idx(slot_idx)
             self._name_tags_by_name[name].SetPosition(slot_position)
 
-    def _names_by_slot(self):
-        result = dict()
-        for name, tag in self._name_tags_by_name.items():
-            slot = name_tag_slot_at(tag.GetPosition())
-            if slot is None:
-                continue
-            if result.get(slot, None) is None:
-                result[slot] = name
-            else:
-                result[slot] = self.MULTIPLE_NAMES
-        return result
-
+    # nametag updates
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
         self._snap_name_tags_to_slots()
-
-    def _snap_name_tags_to_slots(self):
-        # set the position of nametags that are alone in their slot to the slot center
-        for slot_idx, name in self._names_by_slot().items():
-            if name is self.MULTIPLE_NAMES:
-                continue
-            name_tag = self._name_tags_by_name[name]
-            x, y, w, h = slot_rect_by_idx(slot_idx)
-            snap_pos = (
-                x + w // 2 - 100,
-                y + h // 2
-            )
-            name_tag.SetPosition(snap_pos)
 
     def _update_name_tag_presences(self):
         prev_names = list(self._name_tags_by_name.keys())
@@ -309,6 +263,56 @@ class GuiRoot(wx.Frame):
             self._name_tags_by_name[name].highlight()
         for name in non_speaker_names:
             self._name_tags_by_name[name].dehighlight()
+
+    def _snap_name_tags_to_slots(self):
+        # set the position of nametags that are alone in their slot to the slot center
+        for slot_idx, name in self._names_by_slot().items():
+            if name is self.MULTIPLE_NAMES:
+                continue
+            name_tag = self._name_tags_by_name[name]
+            x, y, w, h = slot_rect_by_idx(slot_idx)
+            snap_pos = (
+                x + w // 2 - 100,
+                y + h // 2
+            )
+            name_tag.SetPosition(snap_pos)
+
+    # helper methods
+    def _get_next_free_ledge_position_for_tag(self, name):
+        STEP = 20
+
+        other_tag_rects = [
+            self._name_tags_by_name[name].GetRect()
+            for name in set(self._name_tags_by_name.keys()) - set([name])
+        ]
+
+        ledge_rect = wx.Rect(*LEDGE_RECT)
+        cur_rect = self._name_tags_by_name[name].GetRect()
+
+        cur_rect.topLeft = ledge_rect.topLeft
+        while ledge_rect.Contains(cur_rect.bottomLeft):
+            if not any(cur_rect.Intersects(other_tag_rect) for other_tag_rect in other_tag_rects):
+                return cur_rect.topLeft
+            cur_rect.Left += STEP
+            if cur_rect.Left > ledge_rect.Right:
+                cur_rect.Left = ledge_rect.Left
+                cur_rect.Top += STEP
+
+        # it's not that important that it is not overlapping, it's probably not worth a crash
+        print('didn\'t find a free spot on the ledge, returning default value')
+        return LEDGE_RECT.topLeft
+
+    def _names_by_slot(self):
+        result = dict()
+        for name, tag in self._name_tags_by_name.items():
+            slot = name_tag_slot_at(tag.GetPosition())
+            if slot is None:
+                continue
+            if result.get(slot, None) is None:
+                result[slot] = name
+            else:
+                result[slot] = self.MULTIPLE_NAMES
+        return result
 
 
 def run_gui(state):
