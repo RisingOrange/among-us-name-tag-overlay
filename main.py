@@ -11,7 +11,7 @@ import wx
 
 from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import (name_tag_slot_at, ocr_slot_names,
-                                 slot_pos_by_idx, slot_rect_by_idx, slot_colours)
+                                 slot_pos_by_idx, slot_rect_by_idx, slot_colours, LEDGE_RECT)
 from name_tag import NameTag
 
 config = configparser.ConfigParser()
@@ -126,9 +126,6 @@ class GuiRoot(wx.Frame):
         keyboard.add_hotkey(config['PAUSE_HOTKEY'], self._on_pause_toggle)
         keyboard.add_hotkey(
             config['ARRANGE_TAGS_USING_OCR_HOTKEY'], self._ocr_name_to_slot_matching)
-        keyboard.add_hotkey('ctrl+shift+j', self._save_name_to_colour_matching)
-        keyboard.add_hotkey(
-            'ctrl+shift+k', self._restore_name_to_colour_matching)
 
         self._main()
 
@@ -158,16 +155,43 @@ class GuiRoot(wx.Frame):
         for slot_idx, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES:
                 continue
-            self._name_to_colour[name] = colours[slot_idx]
+            # XXX don't know why the check is needed but without it there were IndexErrors sometimes
+            if slot_idx < len(colours): 
+                self._name_to_colour[name] = colours[slot_idx]
         print(self._name_to_colour)
 
     def _restore_name_to_colour_matching(self):
         colours = slot_colours()
         for name, colour in self._name_to_colour.items():
-            if colour is None:
-                continue
-            pos = slot_pos_by_idx(colours.index(colour))
+            if colour in colours:
+                pos = slot_pos_by_idx(colours.index(colour))
+            else:
+                pos = self._get_next_free_ledge_position_for_tag(name)
             self._name_tags_by_name[name].SetPosition(pos)
+
+    def _get_next_free_ledge_position_for_tag(self, name):
+        STEP = 20
+
+        other_tag_rects = [
+            self._name_tags_by_name[name].GetRect()
+            for name in set(self._name_tags_by_name.keys()) - set([name])
+        ]
+
+        ledge_rect = wx.Rect(*LEDGE_RECT)
+        cur_rect = self._name_tags_by_name[name].GetRect()
+
+        cur_rect.topLeft = ledge_rect.topLeft
+        while ledge_rect.Contains(cur_rect.bottomLeft):
+            if not any(cur_rect.Intersects(other_tag_rect) for other_tag_rect in other_tag_rects):
+                return cur_rect.topLeft
+            cur_rect.Left += STEP
+            if cur_rect.Left > ledge_rect.Right:
+                cur_rect.Left = ledge_rect.Left
+                cur_rect.Top += STEP
+
+        # it's not that important that it is not overlapping, it's probably not worth a crash
+        print('didn\'t find a free spot on the ledge, returning default value')
+        return LEDGE_RECT.topLeft
 
     def _on_pause_toggle(self):
         self.state['pause'] = not self.state['pause']
@@ -267,7 +291,8 @@ class GuiRoot(wx.Frame):
             for name in new_names:
                 # assign name tag to name and move it away from the overlay
                 self._name_tags_by_name[name] = NameTag(text=name)
-                self._name_tags_by_name[name].SetPosition((300, 0))
+                self._name_tags_by_name[name].SetPosition(
+                    self._get_next_free_ledge_position_for_tag(name))
 
             # remove overlays for gone names
             gone_names = set(prev_names) - set(self.state['names'])
