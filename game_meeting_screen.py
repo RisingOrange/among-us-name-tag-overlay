@@ -116,6 +116,10 @@ def _slot_names_from_img(img):
     return results
 
 
+def slot_colours():
+    return _slot_colours_from_img(screenshot())
+
+
 def _slot_colours_from_img(img):
     results = []
     for slot_idx in range(_active_slots_amount_from_img(img)):

@@ -11,7 +11,7 @@ import wx
 
 from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import (name_tag_slot_at, ocr_slot_names,
-                                 slot_pos_by_idx, slot_rect_by_idx)
+                                 slot_pos_by_idx, slot_rect_by_idx, slot_colours)
 from name_tag import NameTag
 
 config = configparser.ConfigParser()
@@ -118,14 +118,17 @@ class GuiRoot(wx.Frame):
 
         self._name_tags_by_name = dict()
 
-        self._name_to_slot_idx = dict()
-        self._just_created_name_to_slot = False
+        self._ocrd_name_to_slot_idx = dict()
+        self._just_ocrd_name_to_slot = False
 
         self._name_to_colour = dict()
 
         keyboard.add_hotkey(config['PAUSE_HOTKEY'], self._on_pause)
         keyboard.add_hotkey(
-            config['MOVE_TAGS_TO_MATCHING_SLOTS_HOTKEY'], self._generate_name_to_slot)
+            config['ARRANGE_TAGS_USING_OCR_HOTKEY'], self._ocr_name_to_slot_matching)
+        keyboard.add_hotkey('ctrl+shift+j', self._save_name_to_colour_matching)
+        keyboard.add_hotkey(
+            'ctrl+shift+k', self._restore_name_to_colour_matching)
 
         self._main()
 
@@ -136,8 +139,8 @@ class GuiRoot(wx.Frame):
         # of the mapping takes some time (ocr) and therefore blocks the gui process
         # to do this the right way, the mappings generation should probably be delegated to another process
         # ... here the mapping is used to move the tags (one iteration after their generation)
-        if self._just_created_name_to_slot:
-            self._just_created_name_to_slot = False
+        if self._just_ocrd_name_to_slot:
+            self._just_ocrd_name_to_slot = False
             self._move_name_tags_to_matching_slots()
 
         if not self.state['pause']:
@@ -147,6 +150,22 @@ class GuiRoot(wx.Frame):
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
             wx.Exit()
+
+    def _save_name_to_colour_matching(self):
+        colours = slot_colours()
+        for slot_idx, name in self._names_by_slot().items():
+            if name is self.MULTIPLE_NAMES:
+                continue
+            self._name_to_colour[name] = colours[slot_idx]
+        print(self._name_to_colour)
+
+    def _restore_name_to_colour_matching(self):
+        colours = slot_colours()
+        for name, colour in self._name_to_colour.items():
+            if colour is None:
+                continue
+            pos = slot_pos_by_idx(colours.index(colour))
+            self._name_tags_by_name[name].SetPosition(pos)
 
     def _on_pause(self):
         self.state['pause'] = not self.state['pause']
@@ -159,7 +178,7 @@ class GuiRoot(wx.Frame):
             for element in self._name_tags_by_name.values():
                 element.Show()
 
-    def _generate_name_to_slot(self):
+    def _ocr_name_to_slot_matching(self):
 
         def best_match(name, names, threshold=2):
             score, match = max([
@@ -183,7 +202,7 @@ class GuiRoot(wx.Frame):
             return i
 
         # reset the mapping
-        self._name_to_slot_idx = dict()
+        self._ocrd_name_to_slot_idx = dict()
 
         # generate new mapping
         print('starting generating mapping of names to slots...')
@@ -194,12 +213,12 @@ class GuiRoot(wx.Frame):
             match = best_match(name.lower(), slot_names)
             if not match:
                 continue
-            self._name_to_slot_idx[name] = slot_names.index(match)
+            self._ocrd_name_to_slot_idx[name] = slot_names.index(match)
 
-        self._just_created_name_to_slot = True
+        self._just_ocrd_name_to_slot = True
 
     def _move_name_tags_to_matching_slots(self):
-        for name, slot_idx in self._name_to_slot_idx.items():
+        for name, slot_idx in self._ocrd_name_to_slot_idx.items():
             slot_position = slot_pos_by_idx(slot_idx)
             self._name_tags_by_name[name].SetPosition(slot_position)
 
