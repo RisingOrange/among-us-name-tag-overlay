@@ -51,12 +51,22 @@ class TestGameMeetingScreen(unittest.TestCase):
         retrieved_colours = gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, ['brown', 'white', 'yellow', 'red', 'orange', 'light-green'])
 
+    def test_slot_colours_3(self):
+        img = cv2.imread('images/screenshot_3.png')
+        retrieved_colours = gms._slot_colours_from_img(img)
+        self.assertEqual(retrieved_colours, ['orange', 'cyan', 'brown', 'blue', 'light-green', 'pink'])
 
-    def test_active_slots_amount(self):
+
+    def test_active_slots_amount_1(self):
         img = cv2.imread('images/screenshot_1.png')
         self.assertEqual(gms._active_slots_amount_from_img(img), 7)
 
+    def test_active_slots_amount_2(self):
         img = cv2.imread('images/screenshot_2.png')
+        self.assertEqual(gms._active_slots_amount_from_img(img), 6)
+
+    def test_active_slots_amount_3(self):
+        img = cv2.imread('images/screenshot_3.png')
         self.assertEqual(gms._active_slots_amount_from_img(img), 6)
 
         
