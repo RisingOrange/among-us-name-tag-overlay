@@ -6,3 +6,4 @@ experiments/*
 tests/__pycache__/*
 images/*
 config.ini
+videos/*
