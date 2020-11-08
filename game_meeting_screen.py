@@ -18,7 +18,7 @@ NAME_HEIGHT = 53
 
 VECTOR_FROM_SLOT_TO_NAME = (120, 0)
 VECTOR_FROM_SLOT_TO_COLOUR_SPOT = (28, 75)
-VECTOR_FROM_SLOT_TO_PRESENCE_CHECK_SPOT = (1, 50)
+DX_FROM_SLOT_TO_ACTIVE_SLOT_CHECK_X = 1
 
 LEDGE_RECT = (270, 35, 1155, 155)
 
@@ -152,15 +152,25 @@ def _get_colour_name(bgr):
 
 
 def _active_slots_amount_from_img(img):
+    STEP = 5
+
     for slot_idx in range(MAX_SLOT_AMOUNT):
-        sx, sy = slot_pos_by_idx(slot_idx)
-        dx, dy = VECTOR_FROM_SLOT_TO_PRESENCE_CHECK_SPOT
-        x, y = (sx+dx, sy+dy)
-        colour = tuple(img[y, x])
-        # two very similiar-looking white shades can have vastly different hues,
+        slot_x, slot_y = slot_pos_by_idx(slot_idx)
+        stripe_x = slot_x + DX_FROM_SLOT_TO___CHECK_X
+        stripe = [
+            tuple(img[y, stripe_x])
+            for y in range(slot_y, slot_y + RECT_OF_FIRST_SLOT[3], STEP)
+        ]
+
+         # two very similiar-looking white shades can have vastly different hues,
         # thats's why the h_diff_tresh is set so high here
-        if not _similiar_colour(colour, (255, 255, 255), h_diff_thresh=1000):
+        if not any(
+            _similiar_colour(colour, (255, 255, 255), h_diff_thresh=1000)
+            for colour in
+            stripe
+        ):
             return slot_idx
+
     return MAX_SLOT_AMOUNT
 
 
