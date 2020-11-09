@@ -1,4 +1,5 @@
 import asyncio
+from collections import defaultdict
 import configparser
 import multiprocessing as mp
 
@@ -140,7 +141,8 @@ class GuiRoot(wx.Frame):
 
     # save/restore name-to-colour-matching of tags
     def _save_name_to_colour_matching(self):
-        self._name_to_colour = dict()
+
+        self._name_to_colour = { name : None for name in self._name_tags_by_name.keys() }
 
         colours = slot_colours()
         for slot_idx, name in self._names_by_slot().items():
