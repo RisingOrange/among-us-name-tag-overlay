@@ -1,5 +1,4 @@
 import asyncio
-from collections import defaultdict
 import configparser
 import multiprocessing as mp
 
@@ -83,12 +82,12 @@ def run_dicord_client(state):
     discord_client.run(config['DISCORD_TOKEN'], bot=False)
 
 
-class GuiRoot(wx.Frame):
+class NameTagController(wx.Frame):
 
     # sentinel value to signal that a slot contains multiple names
     MULTIPLE_NAMES = object()
 
-    # root gui element that is invisible and controls the NameOverlays
+    # root gui element that is invisible and controls the NameTags
     def __init__(self, state):
         wx.Frame.__init__(self, None)
 
@@ -296,7 +295,7 @@ class GuiRoot(wx.Frame):
 
 def run_gui(state):
     app = wx.App()
-    GuiRoot(state)
+    NameTagController(state)
     app.MainLoop()
 
 
