@@ -2,9 +2,8 @@ import math
 from functools import lru_cache
 
 import cv2
-import numpy as np
 
-from util import ocr_outline_font, screenshot
+from util import ocr_outline_font, screenshot, similiar_colour
 
 DEBUG_MODE = True
 
@@ -146,7 +145,7 @@ def _slot_colours_from_img(img):
 
 def _get_colour_name(bgr):
     for bgr_2, name in BGR_TO_COLOUR_NAME.items():
-        if _similiar_colour(bgr, bgr_2):
+        if similiar_colour(bgr, bgr_2):
             return name
     return None
 
@@ -156,7 +155,7 @@ def _active_slots_amount_from_img(img):
 
     for slot_idx in range(MAX_SLOT_AMOUNT):
         slot_x, slot_y = slot_pos_by_idx(slot_idx)
-        stripe_x = slot_x + DX_FROM_SLOT_TO___CHECK_X
+        stripe_x = slot_x + DX_FROM_SLOT_TO_ACTIVE_SLOT_CHECK_X
         stripe = [
             tuple(img[y, stripe_x])
             for y in range(slot_y, slot_y + RECT_OF_FIRST_SLOT[3], STEP)
@@ -165,7 +164,7 @@ def _active_slots_amount_from_img(img):
          # two very similiar-looking white shades can have vastly different hues,
         # thats's why the h_diff_tresh is set so high here
         if not any(
-            _similiar_colour(colour, (255, 255, 255), h_diff_thresh=1000)
+            similiar_colour(colour, (255, 255, 255), h_diff_thresh=1000)
             for colour in
             stripe
         ):
@@ -173,19 +172,3 @@ def _active_slots_amount_from_img(img):
 
     return MAX_SLOT_AMOUNT
 
-
-def _similiar_colour(bgr, bgr_2, h_diff_thresh=5, s_diff_thresh=30, v_diff_tresh=30):
-
-    def bgr_to_hsv(bgr):
-        single_pixel_bgr_frame = np.uint8([[[*bgr]]])
-        single_pixel_hsv_frame = cv2.cvtColor(
-            single_pixel_bgr_frame, cv2.COLOR_BGR2HSV)
-        return single_pixel_hsv_frame[0, 0]
-
-    h, s, v = map(int, bgr_to_hsv(bgr))
-    h_2, s_2, v_2, = map(int, bgr_to_hsv(bgr_2))
-    return (
-        abs(h - h_2) < h_diff_thresh and
-        abs(s - s_2) < s_diff_thresh and
-        abs(v - v_2) < v_diff_tresh
-    )

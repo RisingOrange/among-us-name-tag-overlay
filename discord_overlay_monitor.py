@@ -1,62 +1,57 @@
 import cv2
-import numpy as np
 
-from util import screenshot
-
-# settings for matching avatars, these seem to work
-# with this method, better matches are represented by lower numbers
-IMG_MATCH_METHOD = cv2.TM_SQDIFF_NORMED
-IMG_MATCH_THRESHOLD = 0.2
+from util import screenshot, similiar_colour
 
 OVERLAY_X = 45
 OVERLAY_Y = 25
 OVERLAY_ROWS_HEIGHT_AND_DISTANCE = 48
 
+DEBUG_MODE = False
 
-def active_speaker_names(names, avatars):
-    # given the avatars of the users in the voice-channel, return the names of
-    # the users of which the avatar is highlighted in the overlay
 
-    screenshot_img = screenshot()
+def active_speaker_names(names):
+    return _active_speaker_names_from_img(screenshot(), names)
+
+def _active_speaker_names_from_img(img, names):
+    # return the names of the users of which the overlay is highlighted
+    # it's by checking there are white pixels there where the name of a user is
 
     results = []
-    for row_idx, name_and_avatar in enumerate(sorted_names_and_avatars(names, avatars)):
-        name, avatar = name_and_avatar
+    for row_idx, name in enumerate(sorted_names(names)):
+        stripe_x = OVERLAY_X + 55
+        stripe_y = OVERLAY_Y + row_idx * OVERLAY_ROWS_HEIGHT_AND_DISTANCE + 10
+        stripe_length = 25
+        stripe_width = 15
+        stripe = img[stripe_y:stripe_y+stripe_width, stripe_x:stripe_x + stripe_length]
 
-        # calculate the region where the avatar is (possibly highlighted) based on its index
-        cropped = screenshot_img[
-            (OVERLAY_Y + row_idx*OVERLAY_ROWS_HEIGHT_AND_DISTANCE): (OVERLAY_Y + (row_idx+1)*OVERLAY_ROWS_HEIGHT_AND_DISTANCE),
-            OVERLAY_X: 100
-        ]
+        if DEBUG_MODE:
+            cv2.imwrite(f'cropped_imgs/overlay_monitor_stripes/{row_idx}.png', stripe)
 
-        # compare the region with the avatar
-        small_avatar = cv2.resize(avatar, (40, 40))
-        small_avatar = small_avatar[5:35, 5:35]
-
-        match_result = cv2.matchTemplate(
-            cropped, small_avatar, IMG_MATCH_METHOD)
-
-        match_locations = np.where(match_result <= IMG_MATCH_THRESHOLD)
-        if len(match_locations[0]) != 0:
-            results.append(name)
+        found = False
+        for row in stripe:
+            for pixel in row:
+                # two very similiar-looking white shades can have vastly different hues,
+                # thats's why the h_diff_tresh is set so high here
+                if similiar_colour(tuple(pixel), (255, 255, 255), h_diff_thresh=1000):
+                    results.append(name)
+                    found = True
+                    break
+            if found:
+                break
 
     return results
 
 
-def sorted_names_and_avatars(names, avatars):
+def sorted_names(names):
     # return names and avatars in the order they appear on the overlay
-    return sorted(zip(names, avatars), key=lambda x: x[0].lower())
+    return sorted(names, key=lambda x: x[0].lower())
 
 if __name__ == '__main__':
 
     import keyboard
 
-    # testing with default avatars
     while True:
         if keyboard.is_pressed('ctrl+r'):
-            avatar = cv2.imread('avatar.png')
-            names = active_speaker_names(
-                ['FloatingOrange', '2nd name'],
-                [avatar, avatar]
-            )
-            # print(names)
+            names = active_speaker_names(['FloatingOrange', 'jakub'])
+            print(names)
+            

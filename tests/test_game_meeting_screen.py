@@ -70,8 +70,5 @@ class TestGameMeetingScreen(unittest.TestCase):
         self.assertEqual(gms._active_slots_amount_from_img(img), 6)
 
         
-
-
-
 if __name__ == '__main__':
     unittest.main()

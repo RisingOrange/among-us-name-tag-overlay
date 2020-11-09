@@ -1,12 +1,9 @@
 import asyncio
 import configparser
 import multiprocessing as mp
-from functools import lru_cache
 
-import cv2
 import discord
 import keyboard
-import requests
 import wx
 
 from discord_overlay_monitor import active_speaker_names
@@ -54,15 +51,6 @@ class DicordClient(discord.Client):
     def _voice_channel_member_names(self):
         return [member.name for member in self._voice_channel_members()]
 
-    def _voice_channel_member_avatars(self):
-        results = []
-        avatar_urls = [
-            member.avatar_url for member in self._voice_channel_members()]
-        for url in avatar_urls:
-            img = download_avatar_img(url)
-            results.append(img)
-        return results
-
     async def main(self):
 
         while not self.is_ready():
@@ -77,23 +65,12 @@ class DicordClient(discord.Client):
 
                 self.state['names'] = self._voice_channel_member_names()
                 self.state['speaker_names'] = active_speaker_names(
-                    self._voice_channel_member_names(),
-                    self._voice_channel_member_avatars())
+                    self._voice_channel_member_names())
 
                 if self.state['speaker_names']:
                     print(self.state['speaker_names'], 'are speaking now')
 
             await asyncio.sleep(config.getint('DISCORD_LOOP_DELAY_MS') / 1000.0)
-
-
-@lru_cache(20)
-def download_avatar_img(url):
-    avatar_file_name = 'avatar.png'
-    with requests.get(url) as r:
-        with open(avatar_file_name, 'wb') as f:
-            f.write(r.content)
-    img = cv2.imread(avatar_file_name)
-    return img
 
 
 def run_dicord_client(state):
