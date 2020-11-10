@@ -158,7 +158,7 @@ class NameTagController(wx.Frame):
             if colour in colours:
                 pos = slot_pos_by_idx(colours.index(colour))
             else:
-                pos = self._get_next_free_ledge_position_for_tag(name)
+                pos = self._get_next_free_ledge_position_for_name_tag(name)
             self._name_tags_by_name[name].SetPosition(pos)
 
     # match and arrange tags to slots using OCR
@@ -215,18 +215,18 @@ class NameTagController(wx.Frame):
     def _update_name_tag_presences(self):
         prev_names = list(self._name_tags_by_name.keys())
 
-        # add, remove overlays based on names
+        # add, remove name_tags based on names
         if set(self.state['names']) != set(self._name_tags_by_name.keys()):
 
-            # add overlays for new names
+            # add name_tags for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                # assign name tag to name and move it away from the overlay
+                # assign name_tag to name and move it to the next free ledge position
                 self._name_tags_by_name[name] = NameTag(text=name)
                 self._name_tags_by_name[name].SetPosition(
-                    self._get_next_free_ledge_position_for_tag(name))
+                    self._get_next_free_ledge_position_for_name_tag(name))
 
-            # remove overlays for gone names
+            # remove name_tags for gone names
             gone_names = set(prev_names) - set(self.state['names'])
             for name in gone_names:
                 self._name_tags_by_name[name].Close()
@@ -247,7 +247,7 @@ class NameTagController(wx.Frame):
             self._name_tags_by_name[name].dehighlight()
 
     def _snap_name_tags_to_slots(self):
-        # set the position of nametags that are alone in their slot to the slot center
+        # set the position of nametags that are alone in their slot to a certain position on the slot
         for slot_idx, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES:
                 continue
@@ -257,10 +257,11 @@ class NameTagController(wx.Frame):
                 x + w // 2 - 100,
                 y + h // 2
             )
-            name_tag.SetPosition(snap_pos)
+            if name_tag.GetPosition() != snap_pos:
+                name_tag.SetPosition(snap_pos)
 
     # helper methods
-    def _get_next_free_ledge_position_for_tag(self, name):
+    def _get_next_free_ledge_position_for_name_tag(self, name):
         STEP = 20
 
         other_tag_rects = [
