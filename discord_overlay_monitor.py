@@ -1,16 +1,21 @@
+import configparser
+
 import cv2
 
 from utils import screenshot, similiar_colour
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+config = config['DEFAULT']
 
 OVERLAY_X = 45
 OVERLAY_Y = 25
 OVERLAY_ROWS_HEIGHT_AND_DISTANCE = 48
 
-DEBUG_MODE = False
-
 
 def active_speaker_names(names):
     return _active_speaker_names_from_img(screenshot(), names)
+
 
 def _active_speaker_names_from_img(img, names):
     # return the names of the users of which the overlay is highlighted
@@ -22,10 +27,12 @@ def _active_speaker_names_from_img(img, names):
         stripe_y = OVERLAY_Y + row_idx * OVERLAY_ROWS_HEIGHT_AND_DISTANCE + 10
         stripe_length = 25
         stripe_width = 15
-        stripe = img[stripe_y:stripe_y+stripe_width, stripe_x:stripe_x + stripe_length]
+        stripe = img[stripe_y:stripe_y+stripe_width,
+                     stripe_x:stripe_x + stripe_length]
 
-        if DEBUG_MODE:
-            cv2.imwrite(f'cropped_imgs/overlay_monitor_stripes/{row_idx}.png', stripe)
+        if config.getboolean("DISCORD_OVERLAY_DEBUG_MODE"):
+            cv2.imwrite(
+                f'cropped_imgs/overlay_monitor_stripes/{row_idx}.png', stripe)
 
         found = False
         for row in stripe:
@@ -46,6 +53,7 @@ def sorted_names(names):
     # return names and avatars in the order they appear on the overlay
     return sorted(names, key=lambda x: x[0].lower())
 
+
 if __name__ == '__main__':
 
     import keyboard
@@ -54,4 +62,3 @@ if __name__ == '__main__':
         if keyboard.is_pressed('ctrl+r'):
             names = active_speaker_names(['FloatingOrange', 'jakub'])
             print(names)
-            

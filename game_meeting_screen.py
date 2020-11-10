@@ -1,3 +1,4 @@
+import configparser
 import math
 from functools import lru_cache
 
@@ -5,7 +6,10 @@ import cv2
 
 from utils import ocr_outline_font, screenshot, similiar_colour
 
-DEBUG_MODE = True
+config = configparser.ConfigParser()
+config.read('config.ini')
+config = config['DEFAULT']
+
 
 RECT_OF_FIRST_SLOT = (275, 222, 625, 110)
 SLOTS_HORIZONTAL_DISTANCE = 30
@@ -114,7 +118,7 @@ def _slot_names_from_img(img):
         name = name.lower()
         results.append(name)
 
-        if DEBUG_MODE:
+        if config.getboolean('GAME_MEETING_SCREEN_DEBUG_MODE'):
             cv2.imwrite(f'cropped_names/{idx}.png', cropped)
 
     return results
@@ -131,7 +135,7 @@ def _slot_colours_from_img(img):
         dx, dy = VECTOR_FROM_SLOT_TO_COLOUR_SPOT
         x, y = (sx+dx, sy+dy)
 
-        if DEBUG_MODE:
+        if config.getboolean('GAME_MEETING_SCREEN_DEBUG_MODE'):
             cropped = img[y:y+100, x:x+100]
             cv2.imwrite(f'images/colour_spots/{slot_idx}.png', cropped)
 
@@ -139,7 +143,7 @@ def _slot_colours_from_img(img):
         colour_name = _get_colour_name(colour)
         results.append(colour_name)
 
-        if DEBUG_MODE:
+        if config.getboolean('GAME_MEETING_SCREEN_DEBUG_MODE'):
             print(x, y, tuple(img[y, x]), colour_name)
 
     return results
@@ -163,7 +167,7 @@ def _active_slots_amount_from_img(img):
             for y in range(slot_y, slot_y + RECT_OF_FIRST_SLOT[3], STEP)
         ]
 
-         # two very similiar-looking white shades can have vastly different hues,
+        # two very similiar-looking white shades can have vastly different hues,
         # thats's why the h_diff_tresh is set so high here
         if not any(
             similiar_colour(colour, (255, 255, 255), h_diff_thresh=1000)
@@ -173,4 +177,3 @@ def _active_slots_amount_from_img(img):
             return slot_idx
 
     return MAX_SLOT_AMOUNT
-
