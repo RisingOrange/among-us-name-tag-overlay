@@ -51,22 +51,22 @@ def ocr_outline_font(name_img):
     return pytesseract.image_to_string(img).strip()
 
 
-def similiar_colour(bgr, bgr_2, h_diff_thresh=5, s_diff_thresh=30, v_diff_tresh=30):
-
-    def bgr_to_hsv(bgr):
-        single_pixel_bgr_frame = np.uint8([[[*bgr]]])
-        single_pixel_hsv_frame = cv2.cvtColor(
-            single_pixel_bgr_frame, cv2.COLOR_BGR2HSV)
-        return single_pixel_hsv_frame[0, 0]
-
+def similiar_colour(bgr, bgr_2, h_diff_thresh=5, s_diff_thresh=30, v_diff_thresh=30):
     h, s, v = map(int, bgr_to_hsv(bgr))
     h_2, s_2, v_2, = map(int, bgr_to_hsv(bgr_2))
     return (
         abs(h - h_2) < h_diff_thresh and
         abs(s - s_2) < s_diff_thresh and
-        abs(v - v_2) < v_diff_tresh
+        abs(v - v_2) < v_diff_thresh
     )
-    
+
+
+def bgr_to_hsv(bgr):
+    single_pixel_bgr_frame = np.uint8([[[*bgr]]])
+    single_pixel_hsv_frame = cv2.cvtColor(
+        single_pixel_bgr_frame, cv2.COLOR_BGR2HSV)
+    return single_pixel_hsv_frame[0, 0]
+
 
 def main():
     img = cv2.imread('cropped_names/2.png')
