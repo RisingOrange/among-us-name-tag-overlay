@@ -50,8 +50,8 @@ def _active_speaker_names_from_img(img, names):
 
 
 def sorted_names(names):
-    # return names and avatars in the order they appear on the overlay
-    return sorted(names, key=lambda x: x[0].lower())
+    # return names in the order they appear on the overlay
+    return sorted(names, key=lambda x: x.lower())
 
 
 if __name__ == '__main__':
