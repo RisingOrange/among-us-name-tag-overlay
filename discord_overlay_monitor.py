@@ -1,6 +1,6 @@
 import cv2
 
-from util import screenshot, similiar_colour
+from utils import screenshot, similiar_colour
 
 OVERLAY_X = 45
 OVERLAY_Y = 25

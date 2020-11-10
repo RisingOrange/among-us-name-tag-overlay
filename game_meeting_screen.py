@@ -3,7 +3,7 @@ from functools import lru_cache
 
 import cv2
 
-from util import ocr_outline_font, screenshot, similiar_colour
+from utils import ocr_outline_font, screenshot, similiar_colour
 
 DEBUG_MODE = True
 
@@ -22,7 +22,7 @@ DX_FROM_SLOT_TO_ACTIVE_SLOT_CHECK_X = 1
 LEDGE_RECT = (270, 35, 1155, 155)
 
 
-BGR_TO_COLOUR_NAME = { # cyan is missing
+BGR_TO_COLOUR_NAME = {
     (75, 80, 116): 'brown',
     (203, 164, 145): 'white',
     (83, 152, 188): 'yellow',
@@ -33,6 +33,8 @@ BGR_TO_COLOUR_NAME = { # cyan is missing
     (94, 111, 54): 'dark-green',
     (186, 83, 170): 'pink',
     (88, 76, 69): 'black',
+    (191, 169, 36): 'cyan',
+    (153, 70, 91): 'purple'
 }
 
 
@@ -145,7 +147,7 @@ def _slot_colours_from_img(img):
 
 def _get_colour_name(bgr):
     for bgr_2, name in BGR_TO_COLOUR_NAME.items():
-        if similiar_colour(bgr, bgr_2):
+        if similiar_colour(bgr, bgr_2, h_diff_thresh=8, s_diff_thresh=120, v_diff_thresh=30):
             return name
     return None
 
