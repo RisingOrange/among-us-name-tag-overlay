@@ -234,6 +234,10 @@ class NameTagController(wx.Frame):
 
     def _update_name_tag_highlight_states(self):
         speaker_names = self.state['speaker_names']
+
+        if EVERYONE_ALWAYS_SPEAKS_TEST_MODE:
+            speaker_names = self._name_tags_by_name.keys()
+
         non_speaker_names = set(
             self._name_tags_by_name.keys()) - set(speaker_names)
 
