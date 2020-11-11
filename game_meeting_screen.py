@@ -103,12 +103,13 @@ def _slot_rect_by_idx_dict():
 
 def ocr_slot_names():
     # returns the in-game names in the order they appear on the slots
-    return _slot_names_from_img(screenshot())
+    screenshot_img = screenshot()
+    return _slot_names_from_img(screenshot_img, _active_slots_amount_from_img(screenshot_img))
 
 
-def _slot_names_from_img(img):
+def _slot_names_from_img(img, active_slot_amount):
     results = []
-    for idx, slot_rect in _slot_rect_by_idx_dict().items():
+    for idx, slot_rect in sorted(list(_slot_rect_by_idx_dict().items()))[:active_slot_amount]:
         sx, sy, _, _ = slot_rect
         dx, dy = VECTOR_FROM_SLOT_TO_NAME
         nx, ny = sx+dx, sy+dy
