@@ -1,4 +1,3 @@
-import pprint
 import unittest
 
 import cv2
@@ -27,19 +26,21 @@ class TestGameMeetingScreen(unittest.TestCase):
         )
         self.assertEqual(gms.slot_rect_by_idx(9), last_slot_rect_should_be)
 
-    # def test_slot_names_1(self):
-    #     img = cv2.imread('images/screenshot_1.png')
-    #     self.assertEqual(
-    #         gms._slot_names_from_img(img),
-    #         ['floating'] + [f'dummy {x}' for x in range(1, 7)] + ['' for _ in range(3)]
-    #     )
+    def test_slot_names_2(self):
+        # test if normal names recognized, only one so it
+        img = cv2.imread('images/screenshot_2.png')
+        self.assertEqual(
+            gms._slot_names_from_img(img, 1),
+            'felix'.split()
+        )
 
-    # def test_slot_names_2(self):
-    #     img = cv2.imread('images/screenshot_2.png')
-    #     self.assertEqual(
-    #         gms._slot_names_from_img(img),
-    #         'felix jakub sandy minz naveen baumi noah abdulla crewamate'.split() + ['' for _ in range(3)]
-    #     )
+    def test_slot_names_red_name(self):
+        # test if impostor names are recognized
+        img = cv2.imread('images/screenshot_6.png')
+        self.assertEqual(
+            gms._slot_names_from_img(img, 1),
+            ['jakub']
+        )
 
     def test_slot_colours_1(self):
         img = cv2.imread('images/screenshot_1.png')
@@ -82,6 +83,7 @@ class TestGameMeetingScreen(unittest.TestCase):
     def test_active_slots_amount_3(self):
         img = cv2.imread('images/screenshot_3.png')
         self.assertEqual(gms._active_slots_amount_from_img(img), 6)
+
 
 
 if __name__ == '__main__':

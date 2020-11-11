@@ -3,6 +3,8 @@ import math
 from functools import lru_cache
 
 import cv2
+import numpy as np
+import pytesseract
 
 from utils import ocr_outline_font, screenshot, similiar_colour
 
@@ -108,6 +110,24 @@ def ocr_slot_names():
 
 
 def _slot_names_from_img(img, active_slot_amount):
+
+    def ocr_impostor_name(img):
+        mask = mask_impostor_red(img)
+
+        # invert, so that the font is black and the background white
+        inverted = cv2.inRange(mask, 0, 50)
+        return pytesseract.image_to_string(inverted).strip()
+
+    def mask_impostor_red(img):
+        # returns a mask of the image, all pixels matching the red shade of the impostor name
+        # are equal to 255, all other 0
+        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        result = cv2.inRange(img_hsv, np.array([120, 100, 150]), np.array([200, 300, 300]))
+        return result
+
+    def contains_impostor_red(img):
+        return 255 in mask_impostor_red(img)
+
     results = []
     for idx, slot_rect in sorted(list(_slot_rect_by_idx_dict().items()))[:active_slot_amount]:
         sx, sy, _, _ = slot_rect
@@ -115,7 +135,12 @@ def _slot_names_from_img(img, active_slot_amount):
         nx, ny = sx+dx, sy+dy
 
         cropped = img[ny: ny+NAME_HEIGHT, nx: nx+NAME_WIDTH]
-        name = ocr_outline_font(cropped)
+
+        if contains_impostor_red(cropped):
+            name = ocr_impostor_name(cropped)
+        else:
+            name = ocr_outline_font(cropped)
+            
         name = name.lower()
         results.append(name)
 
