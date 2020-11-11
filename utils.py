@@ -3,6 +3,7 @@ import d3dshot
 import numpy as np
 import pytesseract
 from PIL import Image, ImageColor, ImageDraw
+import win32gui
 
 d3d = None
 
@@ -12,6 +13,10 @@ def get_d3d():
     if d3d is None:
         d3d = d3dshot.create()
     return d3d
+
+
+def active_window_title():
+    return win32gui.GetWindowText(win32gui.GetForegroundWindow())
 
 
 def screenshot():

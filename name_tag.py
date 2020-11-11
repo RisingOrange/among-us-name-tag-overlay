@@ -3,13 +3,15 @@ import wx
 
 class NameTag(wx.Frame):
     # a draggable overlay object that has a name on it and can be highlighted
-    def __init__(self, *args, text=None, **dargs):
-        assert text is not None
-        self.text = text
+    def __init__(self, *args, name=None, **dargs):
+        assert name is not None
+        self.name = name
 
         style = (wx.CLIP_CHILDREN | wx.STAY_ON_TOP | wx.FRAME_NO_TASKBAR |
                  wx.NO_BORDER | wx.FRAME_SHAPED)
         wx.Frame.__init__(self, None, *args, **dargs, style=style)
+
+        self.SetTitle(f'nametag_{self.name}') # is used in main to identify when checking foreground window
 
         self.SetTransparent(220)
 
@@ -23,7 +25,7 @@ class NameTag(wx.Frame):
 
     def setup_text(self):
         # put some text with a larger bold font on it
-        self.st = wx.StaticText(self, label=self.text)
+        self.st = wx.StaticText(self, label=self.name)
         font = self.st.GetFont()
         font.PointSize += 5
         font = font.Bold()
@@ -34,7 +36,7 @@ class NameTag(wx.Frame):
         self.SetSize(frame_size)
 
     def setup_dragging(self):
-        self.drag_img = wx.DragImage(self.text)
+        self.drag_img = wx.DragImage(self.name)
         self.st.Bind(wx.EVT_MOTION, self.on_mouse)
         self.st.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.st.Bind(wx.EVT_LEFT_UP, self.on_left_up)

@@ -7,9 +7,11 @@ import keyboard
 import wx
 
 from discord_overlay_monitor import active_speaker_names
-from game_meeting_screen import (name_tag_slot_at, ocr_slot_names,
-                                 slot_pos_by_idx, slot_rect_by_idx, slot_colours, LEDGE_RECT)
+from game_meeting_screen import (LEDGE_RECT, name_tag_slot_at, ocr_slot_names,
+                                 slot_colours, slot_pos_by_idx,
+                                 slot_rect_by_idx)
 from name_tag import NameTag
+from utils import active_window_title
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -114,8 +116,14 @@ class NameTagController(wx.Frame):
             self._just_ocrd_name_to_slot = False
             self._arrange_tags_based_on_ocrd_name_to_slot_matching()
 
-        if not self.state['pause']:
+        # show/hide tags depending on pause state and foreground window
+        if (not self.state['pause'] and
+            (active_window_title() == 'Among Us' or active_window_title().startswith('nametag_'))
+            or config['SHOW_TAGS_OUTSIDE_OF_GAME']):
             self._update_name_tags()
+            self._show_all_tags()
+        else:
+            self._hide_all_tags()
 
         if not self.state['quit']:
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
@@ -128,17 +136,22 @@ class NameTagController(wx.Frame):
 
         if self.state['pause']:
             self._save_name_to_colour_matching()
-            for element in self._name_tags_by_name.values():
-                element.Hide()
         else:
             self._restore_name_to_colour_matching()
-            for element in self._name_tags_by_name.values():
-                element.Show()
+
+    def _show_all_tags(self):
+        for element in self._name_tags_by_name.values():
+            element.Show()
+
+    def _hide_all_tags(self):
+        for element in self._name_tags_by_name.values():
+            element.Hide()
 
     # save/restore name-to-colour-matching of tags
     def _save_name_to_colour_matching(self):
 
-        self._name_to_colour = { name : None for name in self._name_tags_by_name.keys() }
+        self._name_to_colour = {
+            name: None for name in self._name_tags_by_name.keys()}
 
         colours = slot_colours()
         for slot_idx, name in self._names_by_slot().items():
@@ -219,7 +232,7 @@ class NameTagController(wx.Frame):
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
                 # assign name_tag to name and move it to the next free ledge position
-                self._name_tags_by_name[name] = NameTag(text=name)
+                self._name_tags_by_name[name] = NameTag(name=name)
                 self._name_tags_by_name[name].SetPosition(
                     self._get_next_free_ledge_position_for_name_tag(name))
 
