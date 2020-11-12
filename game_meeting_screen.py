@@ -43,6 +43,11 @@ BGR_TO_COLOUR_NAME = {
     (153, 70, 91): 'purple'
 }
 
+# for checking if in meeting
+TABLET_BUTTON_IMG = cv2.imread('images/tablet_button.png')
+TABLET_BUTTON_RECT = (1600, 480, 110, 100)
+TABLET_BUTTON_MATCH_THRESH = 0.01 # the lower, the harder, 0.001 didn't work anymore
+
 
 def name_tag_slot_at(position):
     # returns the idx of the name tag slot at the position or None if there is no slot there
@@ -122,7 +127,8 @@ def _slot_names_from_img(img, active_slot_amount):
         # returns a mask of the image, all pixels matching the red shade of the impostor name
         # are equal to 255, all other 0
         img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-        result = cv2.inRange(img_hsv, np.array([120, 100, 150]), np.array([200, 300, 300]))
+        result = cv2.inRange(img_hsv, np.array(
+            [120, 100, 150]), np.array([200, 300, 300]))
         return result
 
     def contains_impostor_red(img):
@@ -140,7 +146,7 @@ def _slot_names_from_img(img, active_slot_amount):
             name = ocr_impostor_name(cropped)
         else:
             name = ocr_outline_font(cropped)
-            
+
         name = name.lower()
         results.append(name)
 
@@ -203,3 +209,12 @@ def _active_slots_amount_from_img(img):
             return slot_idx
 
     return MAX_SLOT_AMOUNT
+
+
+def _active_meeting_from_img(img):
+    rx, ry, rw, rh = TABLET_BUTTON_RECT
+    cropped = img[ry:ry+rh, rx:rx+rw]
+    match_result = cv2.matchTemplate(
+        cropped, TABLET_BUTTON_IMG, cv2.TM_SQDIFF_NORMED)
+    match_locations = np.where(match_result <= TABLET_BUTTON_MATCH_THRESH)
+    return len(match_locations[0]) > 0
