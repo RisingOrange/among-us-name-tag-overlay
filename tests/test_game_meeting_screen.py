@@ -84,23 +84,23 @@ class TestGameMeetingScreen(unittest.TestCase):
         img = cv2.imread('images/screenshot_3.png')
         self.assertEqual(gms._active_slots_amount_from_img(img), 6)
 
-    def test_active_meeting_from_img_1(self):
+    def test_is_meeting_active_from_img_1(self):
         self.assertEqual(
-            gms._active_meeting_from_img(
+            gms._is_meeting_active_from_img(
                 cv2.imread('images/screenshot_1.png')),
             True
         )
 
-    def test_active_meeting_from_img_2(self):
+    def test_is_meeting_active_from_img_2(self):
         self.assertEqual(
-            gms._active_meeting_from_img(
+            gms._is_meeting_active_from_img(
                 cv2.imread('images/screenshot_2.png')),
             True
         )
 
-    def test_active_meeting_from_img_3(self):
+    def test_is_meeting_active_from_img_3(self):
         self.assertEqual(
-            gms._active_meeting_from_img(
+            gms._is_meeting_active_from_img(
                 cv2.imread('images/screenshot_7.png')),
             False
         )

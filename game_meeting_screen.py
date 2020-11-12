@@ -46,7 +46,8 @@ BGR_TO_COLOUR_NAME = {
 # for checking if in meeting
 TABLET_BUTTON_IMG = cv2.imread('images/tablet_button.png')
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
-TABLET_BUTTON_MATCH_THRESH = 0.01 # the lower, the harder, 0.001 didn't work anymore
+# the lower, the harder, 0.001 didn't work anymore
+TABLET_BUTTON_MATCH_THRESH = 0.01
 
 
 def name_tag_slot_at(position):
@@ -211,10 +212,18 @@ def _active_slots_amount_from_img(img):
     return MAX_SLOT_AMOUNT
 
 
-def _active_meeting_from_img(img):
+def is_meeting_active():
+    return _is_meeting_active_from_img(screenshot())
+
+
+def _is_meeting_active_from_img(img):
     rx, ry, rw, rh = TABLET_BUTTON_RECT
     cropped = img[ry:ry+rh, rx:rx+rw]
     match_result = cv2.matchTemplate(
         cropped, TABLET_BUTTON_IMG, cv2.TM_SQDIFF_NORMED)
     match_locations = np.where(match_result <= TABLET_BUTTON_MATCH_THRESH)
+
+    if config['GAME_MEETING_SCREEN_DEBUG_MODE']:
+        cv2.imwrite('images/cropped_tablet_button.png', cropped)
+
     return len(match_locations[0]) > 0
