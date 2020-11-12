@@ -1,5 +1,6 @@
 import configparser
 import math
+import time
 from functools import lru_cache
 
 import cv2
@@ -213,7 +214,17 @@ def _active_slots_amount_from_img(img):
 
 
 def is_meeting_active():
-    return _is_meeting_active_from_img(screenshot())
+    # dont do work everytime, but return the previous result, if
+    # little time has passed between the last time this had to do work
+    if time.time() - is_meeting_active.last_work_time > 1:
+        is_meeting_active.last_work_time = time.time()
+        is_meeting_active.last_result = _is_meeting_active_from_img(screenshot())
+        return is_meeting_active.last_result
+    else:
+        return is_meeting_active.last_result
+is_meeting_active.last_result = False
+is_meeting_active.last_work_time = 0
+
 
 
 def _is_meeting_active_from_img(img):
