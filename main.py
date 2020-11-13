@@ -361,7 +361,7 @@ if __name__ == '__main__':
         global state
         print('quitting...')
         state['quit'] = True
-    keyboard.add_hotkey('ctrl+alt+q', quit)
+    keyboard.add_hotkey(config['QUIT_HOTKEY'], quit)
 
     try:
         setup(state)
