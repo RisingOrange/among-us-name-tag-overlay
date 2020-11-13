@@ -64,9 +64,6 @@ class DicordClient(discord.Client):
                 self.state['speaker_names'] = active_speaker_names(
                     self._voice_channel_member_names())
 
-                if self.state['speaker_names']:
-                    print(self.state['speaker_names'], 'are speaking now')
-
             await asyncio.sleep(config.getint('DISCORD_LOOP_DELAY_MS') / 1000.0)
 
 
@@ -178,7 +175,7 @@ class NameTagController(wx.Frame):
             # XXX don't know why the check is needed but without it there were IndexErrors sometimes
             if slot_idx < len(colours):
                 self._name_to_colour[name] = colours[slot_idx]
-        print(self._name_to_colour)
+        print('name to colour: ', self._name_to_colour)
 
     def _restore_name_to_colour_matching(self):
         colours = self.gms.slot_colours()
@@ -229,11 +226,12 @@ class NameTagController(wx.Frame):
         self._just_ocrd_name_to_slot = True
 
     def _arrange_tags_based_on_ocrd_name_to_slot_matching(self):
+        print('ocrd_name_to_slot_idx:', self._ocrd_name_to_slot_idx)
         for name, slot_idx in self._ocrd_name_to_slot_idx.items():
             slot_position = self.gms.slot_pos_by_idx(slot_idx)
             self._name_tags_by_name[name].SetPosition(slot_position)
 
-    # nametag updates@
+    # nametag updates
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
