@@ -1,4 +1,3 @@
-import pprint
 import unittest
 
 import cv2
