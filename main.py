@@ -7,9 +7,7 @@ import keyboard
 import wx
 
 from discord_overlay_monitor import active_speaker_names
-from game_meeting_screen import (LEDGE_RECT, name_tag_slot_at, ocr_slot_names,
-                                 slot_colours, slot_pos_by_idx,
-                                 slot_rect_by_idx)
+from game_meeting_screen import (LEDGE_RECT, GameMeetingScreen)
 from name_tag import NameTag
 from utils import active_window_title
 
@@ -58,7 +56,7 @@ class DicordClient(discord.Client):
         while True:
 
             if self.state['quit']:
-                raise KeyboardInterrupt('quitting')
+                await self.close()
 
             if not self.state['pause']:
 
@@ -92,6 +90,10 @@ class NameTagController(wx.Frame):
 
         self.state = state
 
+        self.gms = GameMeetingScreen()
+
+        self._just_was_in_meeting = False
+
         self._name_tags_by_name = dict()
 
         self._ocrd_name_to_slot_idx = dict()
@@ -116,18 +118,35 @@ class NameTagController(wx.Frame):
             self._just_ocrd_name_to_slot = False
             self._arrange_tags_based_on_ocrd_name_to_slot_matching()
 
-        # show/hide tags depending on pause state and foreground window
-        if (not self.state['pause'] and
-            (active_window_title() == 'Among Us' or active_window_title().startswith('nametag_'))
-            or config['SHOW_TAGS_OUTSIDE_OF_GAME']):
-            self._update_name_tags()
-            self._show_all_tags()
+        # show/hide tags depending on pause state and foreground window and meeting status
+        if not self.state['pause']:
+            if (
+                (
+                    active_window_title() == 'Among Us'
+                    or active_window_title().startswith('nametag_')
+                    or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
+                ) 
+                and self.gms.is_meeting_active()
+            ):
+                if not self._just_was_in_meeting:
+                    self._restore_name_to_colour_matching()
+                self._update_name_tags()
+                self._show_all_tags()
+
+            else:
+                if self._just_was_in_meeting:
+                    self._save_name_to_colour_matching()
+                self._hide_all_tags()
+
+            self._just_was_in_meeting = self.gms.is_meeting_active()
         else:
             self._hide_all_tags()
 
+        
         if not self.state['quit']:
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
+            self.gms.close()
             wx.Exit()
 
     def _on_pause_toggle(self):
@@ -153,7 +172,7 @@ class NameTagController(wx.Frame):
         self._name_to_colour = {
             name: None for name in self._name_tags_by_name.keys()}
 
-        colours = slot_colours()
+        colours = self.gms.slot_colours_from_second_ago()
         for slot_idx, name in self._names_by_slot().items():
             if name is self.MULTIPLE_NAMES:
                 continue
@@ -163,10 +182,10 @@ class NameTagController(wx.Frame):
         print(self._name_to_colour)
 
     def _restore_name_to_colour_matching(self):
-        colours = slot_colours()
+        colours = self.gms.slot_colours()
         for name, colour in self._name_to_colour.items():
             if colour in colours:
-                pos = slot_pos_by_idx(colours.index(colour))
+                pos = self.gms.slot_pos_by_idx(colours.index(colour))
             else:
                 pos = self._get_next_free_ledge_position_for_name_tag(name)
             self._name_tags_by_name[name].SetPosition(pos)
@@ -200,7 +219,7 @@ class NameTagController(wx.Frame):
 
         # generate new mapping
         print('starting generating mapping of names to slots...')
-        slot_names = [name.lower() for name in ocr_slot_names()]
+        slot_names = [name.lower() for name in self.gms.ocr_slot_names()]
         print('slot_names:', slot_names)
 
         for name in self._name_tags_by_name.keys():
@@ -213,10 +232,10 @@ class NameTagController(wx.Frame):
 
     def _arrange_tags_based_on_ocrd_name_to_slot_matching(self):
         for name, slot_idx in self._ocrd_name_to_slot_idx.items():
-            slot_position = slot_pos_by_idx(slot_idx)
+            slot_position = self.gms.slot_pos_by_idx(slot_idx)
             self._name_tags_by_name[name].SetPosition(slot_position)
 
-    # nametag updates
+    # nametag updates@
     def _update_name_tags(self):
         self._update_name_tag_presences()
         self._update_name_tag_highlight_states()
@@ -262,7 +281,7 @@ class NameTagController(wx.Frame):
             if name is self.MULTIPLE_NAMES:
                 continue
             name_tag = self._name_tags_by_name[name]
-            x, y, w, h = slot_rect_by_idx(slot_idx)
+            x, y, w, h = self.gms.slot_rect_by_idx(slot_idx)
             snap_pos = (
                 x + w // 2 - 100,
                 y + h // 2
@@ -298,7 +317,7 @@ class NameTagController(wx.Frame):
     def _names_by_slot(self):
         result = dict()
         for name, tag in self._name_tags_by_name.items():
-            slot = name_tag_slot_at(tag.GetPosition())
+            slot = self.gms.name_tag_slot_at(tag.GetPosition())
             if slot is None:
                 continue
             if result.get(slot, None) is None:
@@ -338,7 +357,14 @@ if __name__ == '__main__':
     state['names'] = []
     state['speaker_names'] = []
 
+    def quit():
+        global state
+        print('quitting...')
+        state['quit'] = True
+    keyboard.add_hotkey('ctrl+alt+q', quit)
+
     try:
         setup(state)
-    except KeyboardInterrupt:
+    except Exception:
         state['quit'] = True
+        
