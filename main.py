@@ -125,7 +125,7 @@ class NameTagController(wx.Frame):
                     active_window_title() == 'Among Us'
                     or active_window_title().startswith('nametag_')
                     or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
-                ) 
+                )
                 and self.gms.is_voting_or_end_phase_of_meeting()
             ):
                 if not self._just_was_in_meeting:
@@ -142,7 +142,6 @@ class NameTagController(wx.Frame):
         else:
             self._hide_all_tags()
 
-        
         if not self.state['quit']:
             wx.CallLater(config.getint('GUI_LOOP_DELAY_MS'), self._main)
         else:
@@ -193,7 +192,7 @@ class NameTagController(wx.Frame):
     # match and arrange tags to slots using OCR
     def _ocr_name_to_slot_matching(self):
 
-        def best_match(name, names, threshold=2):
+        def best_match(name, names, threshold):
             score, match = max([
                 (match_score(x, name), x)
                 for x in names
@@ -202,10 +201,8 @@ class NameTagController(wx.Frame):
 
             if score is None:
                 return None
-            elif score > 0:
-                return match
             else:
-                return None
+                return match
 
         def match_score(a, b):
             # length of longest common prefix
@@ -223,7 +220,8 @@ class NameTagController(wx.Frame):
         print('slot_names:', slot_names)
 
         for name in self._name_tags_by_name.keys():
-            match = best_match(name.lower(), slot_names)
+            match = best_match(name.lower(), slot_names, threshold=config.getint(
+                'LENGTH_NAME_MATCHING_PREFIX'))
             if not match:
                 continue
             self._ocrd_name_to_slot_idx[name] = slot_names.index(match)
@@ -367,4 +365,3 @@ if __name__ == '__main__':
         setup(state)
     except Exception:
         state['quit'] = True
-        
