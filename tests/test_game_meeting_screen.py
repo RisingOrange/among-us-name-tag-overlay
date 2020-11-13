@@ -28,7 +28,8 @@ class TestGameMeetingScreen(unittest.TestCase):
             w,
             h
         )
-        self.assertEqual(self.gms.slot_rect_by_idx(9), last_slot_rect_should_be)
+        self.assertEqual(self.gms.slot_rect_by_idx(9),
+                         last_slot_rect_should_be)
 
     def test_slot_names_2(self):
         # test if normal names recognized, only one so it
@@ -90,22 +91,29 @@ class TestGameMeetingScreen(unittest.TestCase):
 
     def test_is_meeting_active_from_img_1(self):
         self.assertEqual(
-            self.gms._is_meeting_active_from_img(
+            self.gms._is_voting_or_end_phase_of_meeting_from_img(
                 cv2.imread('images/screenshot_1.png')),
             True
         )
 
     def test_is_meeting_active_from_img_2(self):
         self.assertEqual(
-            self.gms._is_meeting_active_from_img(
+            self.gms._is_voting_or_end_phase_of_meeting_from_img(
                 cv2.imread('images/screenshot_2.png')),
             True
         )
 
     def test_is_meeting_active_from_img_3(self):
         self.assertEqual(
-            self.gms._is_meeting_active_from_img(
+            self.gms._is_voting_or_end_phase_of_meeting_from_img(
                 cv2.imread('images/screenshot_7.png')),
+            False
+        )
+
+    def test_is_meeting_active_from_img_4(self):
+        self.assertEqual(
+            self.gms._is_voting_or_end_phase_of_meeting_from_img(
+                cv2.imread('images/screenshot_8.png')),
             False
         )
 

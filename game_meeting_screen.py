@@ -50,6 +50,8 @@ TABLET_BUTTON_IMG = cv2.imread('images/tablet_button.png')
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
 # the lower, the harder, 0.001 didn't work anymore
 TABLET_BUTTON_MATCH_THRESH = 0.01
+DISCUSS_SPLASH_SCREEN_GREEN_POS = 950, 520
+DISCUSS_SPLASH_SCREEN_GREEN_BGR = (83, 238, 171)
 
 
 class GameMeetingScreen:
@@ -118,7 +120,7 @@ class GameMeetingScreen:
         }
 
     # ocr slot names
-    def ocr_slot_names(self, ):
+    def ocr_slot_names(self):
         # returns the in-game names in the order they appear on the slots
         screenshot_img = self.scr.screenshot()
         return self._slot_names_from_img(screenshot_img, self._active_slots_amount_from_img(screenshot_img))
@@ -221,10 +223,21 @@ class GameMeetingScreen:
 
     # is meeting active
     @cached(cache=TTLCache(maxsize=1, ttl=0.8))
-    def is_meeting_active(self):
-        return self._is_meeting_active_from_img(self.scr.screenshot())
+    def is_voting_or_end_phase_of_meeting(self):
+        return self._is_voting_or_end_phase_of_meeting_from_img(self.scr.screenshot())
 
-    def _is_meeting_active_from_img(self, img):
+    def _is_voting_or_end_phase_of_meeting_from_img(self, img):
+
+        # amount of active slots can't be below 3, because there has to be at least one impostor and
+        # at least one more impostor than crewmate, else the game ends
+        
+        return (
+            self._is_tablet_button_visible_from_img(img) 
+            and self._active_slots_amount_from_img(img) >= 3
+            and not self._is_discuss_splash_screen_visible_from_img(img)
+        )
+
+    def _is_tablet_button_visible_from_img(self, img):
         rx, ry, rw, rh = TABLET_BUTTON_RECT
         cropped = img[ry:ry+rh, rx:rx+rw]
         match_result = cv2.matchTemplate(
@@ -236,11 +249,21 @@ class GameMeetingScreen:
 
         return len(match_locations[0]) > 0
 
+    def _is_discuss_splash_screen_visible_from_img(self, img):
+
+        # checks for the greentone that is in the middle of the screen,
+        # when the slpash screen is shown
+        x, y = DISCUSS_SPLASH_SCREEN_GREEN_POS
+        return similiar_colour(
+            img[y, x], 
+            DISCUSS_SPLASH_SCREEN_GREEN_BGR
+        )
+
 
 if __name__ == '__main__':
     scr = Screenshooter()
     img = scr.screenshot()
     cv2.imshow('', img)
     cv2.waitKey(0)
-    print(GameMeetingScreen()._is_meeting_active_from_img(img))
+    print(GameMeetingScreen()._is_voting_or_end_phase_of_meeting_from_img(img))
     scr.stop()

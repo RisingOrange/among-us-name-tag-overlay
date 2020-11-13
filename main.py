@@ -126,7 +126,7 @@ class NameTagController(wx.Frame):
                     or active_window_title().startswith('nametag_')
                     or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
                 ) 
-                and self.gms.is_meeting_active()
+                and self.gms.is_voting_or_end_phase_of_meeting()
             ):
                 if not self._just_was_in_meeting:
                     self._restore_name_to_colour_matching()
@@ -138,7 +138,7 @@ class NameTagController(wx.Frame):
                     self._save_name_to_colour_matching()
                 self._hide_all_tags()
 
-            self._just_was_in_meeting = self.gms.is_meeting_active()
+            self._just_was_in_meeting = self.gms.is_voting_or_end_phase_of_meeting()
         else:
             self._hide_all_tags()
 
