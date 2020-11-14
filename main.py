@@ -105,37 +105,9 @@ class NameTagController(wx.Frame):
         self._main()
 
     def _main(self):
-
-        # HACK when I was trying to move the tags right after generating name_to_slot,
-        # they sometimes stayed at the same place, that was probably because the generation
-        # of the mapping takes some time (ocr) and therefore blocks the gui process
-        # to do this the right way, the mappings generation should probably be delegated to another process
-        # ... here the mapping is used to move the tags (one iteration after their generation)
-        if self._just_ocrd_name_to_slot:
-            self._just_ocrd_name_to_slot = False
-            self._arrange_tags_based_on_ocrd_name_to_slot_matching()
-
         # show/hide tags depending on pause state and foreground window and meeting status
         if not self.state['pause']:
-            if (
-                (
-                    active_window_title() == 'Among Us'
-                    or active_window_title().startswith('nametag_')
-                    or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
-                )
-                and self.gms.is_voting_or_end_phase_of_meeting()
-            ):
-                if not self._just_was_in_meeting:
-                    self._restore_name_to_colour_matching()
-                self._update_name_tags()
-                self._show_all_tags()
-
-            else:
-                if self._just_was_in_meeting:
-                    self._save_name_to_colour_matching()
-                self._hide_all_tags()
-
-            self._just_was_in_meeting = self.gms.is_voting_or_end_phase_of_meeting()
+            self._actual_main()
         else:
             self._hide_all_tags()
 
@@ -144,6 +116,30 @@ class NameTagController(wx.Frame):
         else:
             self.gms.close()
             wx.Exit()
+
+    def _actual_main(self):
+        if ((
+            active_window_title() == 'Among Us'
+            or active_window_title().startswith('nametag_')
+            or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
+        )
+            and self.gms.is_voting_or_end_phase_of_meeting()
+        ):
+            if not self._just_was_in_meeting:
+                self._restore_name_to_colour_matching()
+
+            if self._just_ocrd_name_to_slot:
+                self._just_ocrd_name_to_slot = False
+                self._arrange_tags_based_on_ocrd_name_to_slot_matching()
+
+            self._update_name_tags()
+            self._show_all_tags()
+        else:
+            if self._just_was_in_meeting:
+                self._save_name_to_colour_matching()
+            self._hide_all_tags()
+
+        self._just_was_in_meeting = self.gms.is_voting_or_end_phase_of_meeting()
 
     def _on_pause_toggle(self):
         self.state['pause'] = not self.state['pause']
