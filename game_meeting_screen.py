@@ -45,7 +45,7 @@ BGR_TO_COLOUR_NAME = {
 }
 
 # for checking if in meeting
-TABLET_BUTTON_IMG = cv2.imread('images/tablet_button.png')
+TABLET_BUTTON_IMG = cv2.imread('resources/tablet_button.png')
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
 # the lower, the harder, 0.001 didn't work anymore
 TABLET_BUTTON_MATCH_THRESH = 0.01
