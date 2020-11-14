@@ -7,7 +7,7 @@ import keyboard
 import wx
 
 from discord_overlay_monitor import active_speaker_names
-from game_meeting_screen import (LEDGE_RECT, GameMeetingScreen)
+from game_meeting_screen import LEDGE_RECT, GameMeetingScreen
 from name_tag import NameTag
 from utils import active_window_title
 
