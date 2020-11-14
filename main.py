@@ -176,7 +176,7 @@ class NameTagController(wx.Frame):
     def _restore_name_to_colour_matching(self):
         colours = self.gms.slot_colours()
         for name, colour in self._name_to_colour.items():
-            if colour in colours:
+            if colour is not None:
                 pos = self.gms.slot_pos_by_idx(colours.index(colour))
             else:
                 pos = self._get_next_free_ledge_position_for_name_tag(name)
