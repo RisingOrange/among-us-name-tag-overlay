@@ -1,11 +1,11 @@
 import configparser
 import math
 from functools import lru_cache
-from cachetools import TTLCache, cached
 
 import cv2
 import numpy as np
 import pytesseract
+from cachetools import TTLCache, cached
 
 from screenshooter import Screenshooter
 from utils import ocr_outline_font, similiar_colour
@@ -16,16 +16,15 @@ config = config['DEFAULT']
 
 
 RECT_OF_FIRST_SLOT = (275, 222, 625, 110)
-SLOTS_HORIZONTAL_DISTANCE = 30
-SLOTS_VERTICAL_DISTANCE = 25
+SLOTS_HORIZONTAL_DISTANCE_VECTOR = (30, 0)
+SLOTS_VERTICAL_DISTANCE_VECTOR = (0, 25)
 MAX_SLOT_AMOUNT = 10
 
-NAME_WIDTH = 300
-NAME_HEIGHT = 53
+NAME_DIMENSIONS = (300, 53)
 
-VECTOR_FROM_SLOT_TO_NAME = (120, 0)
-VECTOR_FROM_SLOT_TO_COLOUR_SPOT = (28, 75)
-DX_FROM_SLOT_TO_ACTIVE_SLOT_CHECK_X = 1
+SLOT_TO_NAME_VECTOR = (120, 0)
+SLOT_TO_COLOUR_SPOT_VECTOR = (28, 75)
+SLOT_TO_ACTIVE_SLOT_CHECK_VECTOR = (1, 0)
 
 LEDGE_RECT = (270, 35, 1155, 155)
 
@@ -50,7 +49,7 @@ TABLET_BUTTON_IMG = cv2.imread('images/tablet_button.png')
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
 # the lower, the harder, 0.001 didn't work anymore
 TABLET_BUTTON_MATCH_THRESH = 0.01
-DISCUSS_SPLASH_SCREEN_GREEN_POS = 950, 520
+DISCUSS_SPLASH_SCREEN_GREEN_POS = (950, 520)
 DISCUSS_SPLASH_SCREEN_GREEN_BGR = (83, 238, 171)
 
 
@@ -97,7 +96,7 @@ class GameMeetingScreen:
         for i in range(amount_slots_in_first_col):
             first_row.append((
                 x1,
-                y1 + i * (h + SLOTS_VERTICAL_DISTANCE),
+                y1 + i * (h + SLOTS_VERTICAL_DISTANCE_VECTOR[1]),
                 w,
                 h
             ))
@@ -105,8 +104,8 @@ class GameMeetingScreen:
         second_row = []
         for i in range(MAX_SLOT_AMOUNT - amount_slots_in_first_col):
             second_row.append((
-                x1 + w + SLOTS_HORIZONTAL_DISTANCE,
-                y1 + i * (h + SLOTS_VERTICAL_DISTANCE),
+                x1 + w + SLOTS_HORIZONTAL_DISTANCE_VECTOR[0],
+                y1 + i * (h + SLOTS_VERTICAL_DISTANCE_VECTOR[1]),
                 w,
                 h
             ))
@@ -148,10 +147,10 @@ class GameMeetingScreen:
         results = []
         for idx, slot_rect in sorted(list(self._slot_rect_by_idx_dict().items()))[:active_slot_amount]:
             sx, sy, _, _ = slot_rect
-            dx, dy = VECTOR_FROM_SLOT_TO_NAME
+            dx, dy = SLOT_TO_NAME_VECTOR
             nx, ny = sx+dx, sy+dy
 
-            cropped = img[ny: ny+NAME_HEIGHT, nx: nx+NAME_WIDTH]
+            cropped = img[ny: ny+NAME_DIMENSIONS[1], nx: nx+NAME_DIMENSIONS[0]]
 
             if contains_impostor_red(cropped):
                 name = ocr_impostor_name(cropped)
@@ -177,7 +176,7 @@ class GameMeetingScreen:
         results = []
         for slot_idx in range(self._active_slots_amount_from_img(img)):
             sx, sy = self.slot_pos_by_idx(slot_idx)
-            dx, dy = VECTOR_FROM_SLOT_TO_COLOUR_SPOT
+            dx, dy = SLOT_TO_COLOUR_SPOT_VECTOR
             x, y = (sx+dx, sy+dy)
 
             if config.getboolean('GAME_MEETING_SCREEN_DEBUG_MODE'):
@@ -204,7 +203,7 @@ class GameMeetingScreen:
 
         for slot_idx in range(MAX_SLOT_AMOUNT):
             slot_x, slot_y = self.slot_pos_by_idx(slot_idx)
-            stripe_x = slot_x + DX_FROM_SLOT_TO_ACTIVE_SLOT_CHECK_X
+            stripe_x = slot_x + SLOT_TO_ACTIVE_SLOT_CHECK_VECTOR[0]
             stripe = [
                 tuple(img[y, stripe_x])
                 for y in range(slot_y, slot_y + RECT_OF_FIRST_SLOT[3], STEP)
@@ -230,9 +229,9 @@ class GameMeetingScreen:
 
         # amount of active slots can't be below 3, because there has to be at least one impostor and
         # at least one more impostor than crewmate, else the game ends
-        
+
         return (
-            self._is_tablet_button_visible_from_img(img) 
+            self._is_tablet_button_visible_from_img(img)
             and self._active_slots_amount_from_img(img) >= 3
             and not self._is_discuss_splash_screen_visible_from_img(img)
         )
@@ -255,7 +254,7 @@ class GameMeetingScreen:
         # when the slpash screen is shown
         x, y = DISCUSS_SPLASH_SCREEN_GREEN_POS
         return similiar_colour(
-            img[y, x], 
+            img[y, x],
             DISCUSS_SPLASH_SCREEN_GREEN_BGR
         )
 

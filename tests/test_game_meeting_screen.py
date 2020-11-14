@@ -1,8 +1,10 @@
 import unittest
 
 import cv2
-from game_meeting_screen import (RECT_OF_FIRST_SLOT, SLOTS_HORIZONTAL_DISTANCE,
-                                 SLOTS_VERTICAL_DISTANCE, GameMeetingScreen)
+from game_meeting_screen import (RECT_OF_FIRST_SLOT,
+                                 SLOTS_HORIZONTAL_DISTANCE_VECTOR,
+                                 SLOTS_VERTICAL_DISTANCE_VECTOR,
+                                 GameMeetingScreen)
 
 
 class TestGameMeetingScreen(unittest.TestCase):
@@ -23,8 +25,8 @@ class TestGameMeetingScreen(unittest.TestCase):
         # check last slot rect
         x1, y1, w, h = RECT_OF_FIRST_SLOT
         last_slot_rect_should_be = (
-            x1 + w + SLOTS_HORIZONTAL_DISTANCE,
-            y1 + 4 * (h + SLOTS_VERTICAL_DISTANCE),
+            x1 + w + SLOTS_HORIZONTAL_DISTANCE_VECTOR[0],
+            y1 + 4 * (h + SLOTS_VERTICAL_DISTANCE_VECTOR[1]),
             w,
             h
         )
