@@ -17,7 +17,10 @@ class Screenshooter():
         return cv2.cvtColor(self.d3d.screenshot(), cv2.COLOR_RGB2BGR)
 
     def screenshot_from_second_ago(self):
-        return cv2.cvtColor(self.d3d.get_frame(3), cv2.COLOR_RGB2BGR)
+        if len(self.d3d.frame_buffer) >= 4:
+            return cv2.cvtColor(self.d3d.get_frame(3), cv2.COLOR_RGB2BGR)
+        else:
+            return self._screenshot()
 
     def stop(self):
         self.d3d.stop()
