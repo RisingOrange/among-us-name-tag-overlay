@@ -122,9 +122,9 @@ class NameTagController(wx.Frame):
         if ((
             active_window_title() == 'Among Us'
             or active_window_title().startswith('nametag_')
-            or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
-        )
             and self.gms.is_voting_or_end_phase_of_meeting()
+        ) 
+            or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
         ):
             if not self._just_was_in_meeting:
                 self._restore_name_to_colour_matching()
@@ -243,16 +243,22 @@ class NameTagController(wx.Frame):
             # add name_tags for new names
             new_names = set(self.state['names']) - set(prev_names)
             for name in new_names:
-                # assign name_tag to name and move it to the next free ledge position
-                self._name_tags_by_name[name] = NameTag(name=name)
-                self._name_tags_by_name[name].SetPosition(
-                    self._get_next_free_ledge_position_for_name_tag(name))
+                self._add_name_tag(name)
 
             # remove name_tags for gone names
             gone_names = set(prev_names) - set(self.state['names'])
             for name in gone_names:
-                self._name_tags_by_name[name].Close()
-                del self._name_tags_by_name[name]
+                self._remove_name_tag(name)
+
+    def _add_name_tag(self, name):
+        # assign name_tag to name and move it to the next free ledge position
+        self._name_tags_by_name[name] = NameTag(name=name)
+        self._name_tags_by_name[name].SetPosition(
+            self._get_next_free_ledge_position_for_name_tag(name))
+
+    def _remove_name_tag(self, name):
+        self._name_tags_by_name[name].Close()
+        del self._name_tags_by_name[name]
 
     def _update_name_tag_highlight_states(self):
         speaker_names = self.state['speaker_names']
@@ -284,7 +290,10 @@ class NameTagController(wx.Frame):
 
     # helper methods
     def _get_next_free_ledge_position_for_name_tag(self, name):
-        STEP = 20
+        X_STEP = 20
+        Y_STEP = 60
+        X_EXTRA_SPACE = 25  # simple, kind of stupid way to make sure gap is not too small
+        Y_EXTRA_SPACE = 25
 
         other_tag_rects = [
             self._name_tags_by_name[name].GetRect()
@@ -297,15 +306,15 @@ class NameTagController(wx.Frame):
         cur_rect.topLeft = ledge_rect.topLeft
         while ledge_rect.Contains(cur_rect.bottomLeft):
             if not any(cur_rect.Intersects(other_tag_rect) for other_tag_rect in other_tag_rects):
-                return cur_rect.topLeft
-            cur_rect.Left += STEP
+                return (cur_rect.Left + X_EXTRA_SPACE, cur_rect.Top + Y_EXTRA_SPACE)
+            cur_rect.Left += X_STEP
             if cur_rect.Left > ledge_rect.Right:
                 cur_rect.Left = ledge_rect.Left
-                cur_rect.Top += STEP
+                cur_rect.Top += Y_STEP
 
         # it's not that important that it is not overlapping, it's probably not worth a crash
         print('didn\'t find a free spot on the ledge, returning default value')
-        return LEDGE_RECT.topLeft
+        return LEDGE_RECT[:2]
 
     def _names_by_slot(self):
         result = dict()
