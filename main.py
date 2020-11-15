@@ -9,10 +9,11 @@ import wx
 from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import LEDGE_RECT, GameMeetingScreen
 from name_tag import NameTag
+from pyinstaller_utils import resource_path
 from utils import active_window_title
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(resource_path('config.ini'))
 config = config['DEFAULT']
 
 
@@ -340,6 +341,7 @@ def setup(state):
 
 
 if __name__ == '__main__':
+    mp.freeze_support()
 
     manager = mp.Manager()
     state = manager.dict()
