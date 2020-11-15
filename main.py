@@ -47,7 +47,7 @@ class DicordClient(discord.Client):
         return []
 
     def _voice_channel_member_names(self):
-        return [member.name for member in self._voice_channel_members()]
+        return [str(member) for member in self._voice_channel_members()]
 
     async def main(self):
 
@@ -252,9 +252,15 @@ class NameTagController(wx.Frame):
 
     def _add_name_tag(self, name):
         # assign name_tag to name and move it to the next free ledge position
-        self._name_tags_by_name[name] = NameTag(name=name)
+        self._name_tags_by_name[name] = NameTag(name=self._prepare_name(name))
         self._name_tags_by_name[name].SetPosition(
             self._get_next_free_ledge_position_for_name_tag(name))
+
+    def _prepare_name(self, name):
+        
+        # discord names with discrimators have the format username#1234
+        actual_name, _ = name.split('#')
+        return actual_name
 
     def _remove_name_tag(self, name):
         self._name_tags_by_name[name].Close()
