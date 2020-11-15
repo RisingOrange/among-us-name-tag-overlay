@@ -20,7 +20,7 @@ class Screenshooter():
         if len(self.d3d.frame_buffer) >= 4:
             return cv2.cvtColor(self.d3d.get_frame(3), cv2.COLOR_RGB2BGR)
         else:
-            return self._screenshot()
+            return self.screenshot()
 
     def stop(self):
         self.d3d.stop()
