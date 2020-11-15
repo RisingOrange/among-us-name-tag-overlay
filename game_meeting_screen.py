@@ -46,7 +46,7 @@ BGR_TO_COLOUR_NAME = {
 }
 
 # for checking if in meeting
-TABLET_BUTTON_IMG = cv2.imread(resource_path('tablet_button.png'))
+TABLET_BUTTON_IMG = cv2.imread(resource_path('resources/tablet_button.png'))
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
 # the lower, the harder, 0.001 didn't work anymore
 TABLET_BUTTON_MATCH_THRESH = 0.01
@@ -263,7 +263,5 @@ class GameMeetingScreen:
 if __name__ == '__main__':
     scr = Screenshooter()
     img = scr.screenshot()
-    cv2.imshow('', img)
-    cv2.waitKey(0)
     print(GameMeetingScreen()._is_voting_or_end_phase_of_meeting_from_img(img))
     scr.stop()
