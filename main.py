@@ -1,6 +1,7 @@
 import asyncio
 import configparser
 import multiprocessing as mp
+import os
 
 import discord
 import keyboard
@@ -9,11 +10,11 @@ import wx
 from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import LEDGE_RECT, GameMeetingScreen
 from name_tag import NameTag
-from pyinstaller_utils import resource_path
+from pyinstaller_utils import executable_dir
 from utils import active_window_title
 
 config = configparser.ConfigParser()
-config.read(resource_path('config.ini'))
+config.read(os.path.join(executable_dir(), 'config.ini'))
 config = config['DEFAULT']
 
 
@@ -123,7 +124,7 @@ class NameTagController(wx.Frame):
             active_window_title() == 'Among Us'
             or active_window_title().startswith('nametag_')
             and self.gms.is_voting_or_end_phase_of_meeting()
-        ) 
+        )
             or config.getboolean('SHOW_TAGS_OUTSIDE_OF_GAME')
         ):
             if not self._just_was_in_meeting:
@@ -257,7 +258,7 @@ class NameTagController(wx.Frame):
             self._get_next_free_ledge_position_for_name_tag(name))
 
     def _prepare_name(self, name):
-        
+
         # discord names with discrimators have the format username#1234
         actual_name, _ = name.split('#')
         return actual_name

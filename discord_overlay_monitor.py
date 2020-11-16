@@ -1,12 +1,13 @@
 import configparser
+import os
 
 import cv2
 
-from pyinstaller_utils import resource_path
+from pyinstaller_utils import executable_dir
 from utils import screenshot, similiar_colour
 
 config = configparser.ConfigParser()
-config.read(resource_path('config.ini'))
+config.read(os.path.join(executable_dir(), 'config.ini'))
 config = config['DEFAULT']
 
 OVERLAY_X = 45

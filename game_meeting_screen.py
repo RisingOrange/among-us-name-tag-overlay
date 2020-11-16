@@ -1,5 +1,6 @@
 import configparser
 import math
+import os
 from functools import lru_cache
 
 import cv2
@@ -7,12 +8,12 @@ import numpy as np
 import pytesseract
 from cachetools import TTLCache, cached
 
-from pyinstaller_utils import resource_path
+from pyinstaller_utils import resource_path, executable_dir
 from screenshooter import Screenshooter
 from utils import ocr_outline_font, similiar_colour
 
 config = configparser.ConfigParser()
-config.read(resource_path('config.ini'))
+config.read(os.path.join(executable_dir(), 'config.ini'))
 config = config['DEFAULT']
 
 
@@ -46,7 +47,7 @@ BGR_TO_COLOUR_NAME = {
 }
 
 # for checking if in meeting
-TABLET_BUTTON_IMG = cv2.imread(resource_path('resources/tablet_button.png'))
+TABLET_BUTTON_IMG = cv2.imread(resource_path('tablet_button.png'))
 TABLET_BUTTON_RECT = (1600, 480, 110, 100)
 # the lower, the harder, 0.001 didn't work anymore
 TABLET_BUTTON_MATCH_THRESH = 0.01
