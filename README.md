@@ -2,7 +2,7 @@
 The goal of this program is to make it easier to see who is speaking in the social deduction game "Among Us". When you are in a new group and don't know how the other players voices sound like yet, it can get confusing, even with the Discord overlay turned on.
 The program displays nametags for people that are in your Discord voicecall during Among Us meetings. The nametags are draggable so you can drag them onto the players. They will blink when the person speaks. Once they are attached to a color, they will appear next to this player on the following meetings.
 
-![](readme_images/highlighted_nametags.gif)
+
 ![](readme_images/dragging_nametags.gif)
 
 Note that the program works by taking screenshots and checking which Discord overlay rows are highlighted to khow who is speaking. It will not work if the Discord overlay is not visible or when it isn't where the program expects it to be (see the expected seetings below).
