@@ -1,13 +1,16 @@
 __pycache__/*
 .vscode/*
-
 tests/__pycache__/*
+
 experiments/*
 images/*
 videos/*
 output/*
+cropped_imgs/*
+cropped_names/*
+match_results/*
+resources/*
 
-*.png
 *.prof
 *.pyo
 *config.json
