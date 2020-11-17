@@ -1,6 +1,5 @@
-import configparser
+
 import math
-import os
 from functools import lru_cache
 
 import cv2
@@ -8,13 +7,12 @@ import numpy as np
 import pytesseract
 from cachetools import TTLCache, cached
 
-from pyinstaller_utils import resource_path, executable_dir
+from config import get_config
+from pyinstaller_utils import resource_path
 from screenshooter import Screenshooter
 from utils import ocr_outline_font, similiar_colour
 
-config = configparser.ConfigParser()
-config.read(os.path.join(executable_dir(), 'config.ini'))
-config = config['DEFAULT']
+config = get_config()
 
 
 RECT_OF_FIRST_SLOT = (275, 222, 625, 110)

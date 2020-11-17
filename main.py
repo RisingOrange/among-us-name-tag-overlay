@@ -1,22 +1,19 @@
 import asyncio
-import configparser
 import multiprocessing as mp
-import os
 
 import discord
 import keyboard
 import wx
 
+import config
+from config import get_config
 from discord_overlay_monitor import active_speaker_names
 from game_meeting_screen import LEDGE_RECT, GameMeetingScreen
 from name_tag import NameTag
-from pyinstaller_utils import executable_dir
 from utils import active_window_title
 
-config = configparser.ConfigParser()
-config.read(os.path.join(executable_dir(), 'config.ini'))
-config = config['DEFAULT']
 
+config = get_config()
 
 class DicordClient(discord.Client):
     # connects to discord and updates the app state every DELAY seconds

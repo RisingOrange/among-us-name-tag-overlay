@@ -9,6 +9,7 @@ output/*
 
 *.png
 *.prof
-*.ini
 *.pyo
 *config.json
+
+my_config.ini

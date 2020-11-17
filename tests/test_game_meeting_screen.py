@@ -35,7 +35,7 @@ class TestGameMeetingScreen(unittest.TestCase):
 
     def test_slot_names_2(self):
         # test if normal names recognized, only one so it
-        img = cv2.imread('images/screenshot_2.png')
+        img = cv2.imread('tests/images/screenshot_2.png')
         self.assertEqual(
             self.gms._slot_names_from_img(img, 1),
             'felix'.split()
@@ -43,79 +43,79 @@ class TestGameMeetingScreen(unittest.TestCase):
 
     def test_slot_names_red_name(self):
         # test if impostor names are recognized
-        img = cv2.imread('images/screenshot_6.png')
+        img = cv2.imread('tests/images/screenshot_6.png')
         self.assertEqual(
             self.gms._slot_names_from_img(img, 1),
             ['jakub']
         )
 
     def test_slot_colours_1(self):
-        img = cv2.imread('images/screenshot_1.png')
+        img = cv2.imread('tests/images/screenshot_1.png')
         retrieved_colours = self.gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, [
                          'white', 'red', 'blue', 'dark-green', 'pink', 'orange', 'yellow'])
 
     def test_slot_colours_2(self):
-        img = cv2.imread('images/screenshot_2.png')
+        img = cv2.imread('tests/images/screenshot_2.png')
         retrieved_colours = self.gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, [
                          'brown', 'white', 'yellow', 'red', 'orange', 'light-green'])
 
     def test_slot_colours_3(self):
-        img = cv2.imread('images/screenshot_3.png')
+        img = cv2.imread('tests/images/screenshot_3.png')
         retrieved_colours = self.gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, [
                          'orange', 'cyan', 'brown', 'blue', 'light-green', 'pink'])
 
     def test_slot_colours_4(self):
-        img = cv2.imread('images/screenshot_4.png')
+        img = cv2.imread('tests/images/screenshot_4.png')
         retrieved_colours = self.gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, [
                          'cyan', 'red', 'blue', 'dark-green', 'pink'])
 
     def test_slot_colours_5(self):
-        img = cv2.imread('images/screenshot_5.png')
+        img = cv2.imread('tests/images/screenshot_5.png')
         retrieved_colours = self.gms._slot_colours_from_img(img)
         self.assertEqual(retrieved_colours, [
                          'purple', 'red', 'blue', 'dark-green', 'pink'])
 
     def test_active_slots_amount_1(self):
-        img = cv2.imread('images/screenshot_1.png')
+        img = cv2.imread('tests/images/screenshot_1.png')
         self.assertEqual(self.gms._active_slots_amount_from_img(img), 7)
 
     def test_active_slots_amount_2(self):
-        img = cv2.imread('images/screenshot_2.png')
+        img = cv2.imread('tests/images/screenshot_2.png')
         self.assertEqual(self.gms._active_slots_amount_from_img(img), 6)
 
     def test_active_slots_amount_3(self):
-        img = cv2.imread('images/screenshot_3.png')
+        img = cv2.imread('tests/images/screenshot_3.png')
         self.assertEqual(self.gms._active_slots_amount_from_img(img), 6)
 
     def test_is_meeting_active_from_img_1(self):
         self.assertEqual(
             self.gms._is_voting_or_end_phase_of_meeting_from_img(
-                cv2.imread('images/screenshot_1.png')),
+                cv2.imread('tests/images/screenshot_1.png')),
             True
         )
 
     def test_is_meeting_active_from_img_2(self):
         self.assertEqual(
             self.gms._is_voting_or_end_phase_of_meeting_from_img(
-                cv2.imread('images/screenshot_2.png')),
+                cv2.imread('tests/images/screenshot_2.png')),
             True
         )
 
     def test_is_meeting_active_from_img_3(self):
         self.assertEqual(
             self.gms._is_voting_or_end_phase_of_meeting_from_img(
-                cv2.imread('images/screenshot_7.png')),
+                cv2.imread('tests/images/screenshot_7.png')),
             False
         )
 
     def test_is_meeting_active_from_img_4(self):
         self.assertEqual(
             self.gms._is_voting_or_end_phase_of_meeting_from_img(
-                cv2.imread('images/screenshot_8.png')),
+                cv2.imread('tests/images/screenshot_8.png')),
             False
         )
 

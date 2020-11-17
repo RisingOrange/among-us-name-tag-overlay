@@ -1,18 +1,13 @@
-import configparser
-import os
-
 import cv2
 
-from pyinstaller_utils import executable_dir
+from config import get_config
 from utils import screenshot, similiar_colour
-
-config = configparser.ConfigParser()
-config.read(os.path.join(executable_dir(), 'config.ini'))
-config = config['DEFAULT']
 
 OVERLAY_X = 45
 OVERLAY_Y = 25
 OVERLAY_ROWS_HEIGHT_AND_DISTANCE = 48
+
+config = get_config()
 
 
 def active_speaker_names(names):
