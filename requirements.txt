@@ -1,0 +1,12 @@
+keyboard==0.13.5
+discord.py==1.5.1
+cachetools==4.1.1
+numpy==1.19.2
+pywin32==228
+wxPython==4.1.0
+pytesseract==0.3.6
+opencv_python_headless==4.4.0.46
+d3dshot==0.1.5
+discord==1.0.1
+Pillow==8.0.1
+win32gui==221.6
