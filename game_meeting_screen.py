@@ -59,7 +59,6 @@ class GameMeetingScreen:
         self.scr = Screenshooter()
         self.scr.start()
 
-    # users of the class have to close it, when their done with it
     def close(self):
         self.scr.stop()
 
@@ -86,8 +85,8 @@ class GameMeetingScreen:
     def slot_rect_by_idx(self, idx):
         return self._slot_rect_by_idx_dict()[idx]
 
-    @lru_cache(1)
-    def _slot_rect_by_idx_dict(self, ):
+    @lru_cache(1)  # hacky way to make it only be calculated once
+    def _slot_rect_by_idx_dict(self):
         amount_slots_in_first_col = math.ceil(MAX_SLOT_AMOUNT / 2)
 
         x1, y1, w, h = RECT_OF_FIRST_SLOT
@@ -228,8 +227,7 @@ class GameMeetingScreen:
     def _is_voting_or_end_phase_of_meeting_from_img(self, img):
 
         # amount of active slots can't be below 3, because there has to be at least one impostor and
-        # at least one more impostor than crewmate, else the game ends
-
+        # at least one more crewmate than impostors, else the game ends
         return (
             self._is_tablet_button_visible_from_img(img)
             and self._active_slots_amount_from_img(img) >= 3
@@ -250,8 +248,8 @@ class GameMeetingScreen:
 
     def _is_discuss_splash_screen_visible_from_img(self, img):
 
-        # checks for the greentone that is in the middle of the screen,
-        # when the slpash screen is shown
+        # checks for the green-tone that is in the middle of the screen,
+        # when the slpash screen with "Discuss!" written on it is shown
         x, y = DISCUSS_SPLASH_SCREEN_GREEN_POS
         return similiar_colour(
             img[y, x],

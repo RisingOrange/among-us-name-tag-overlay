@@ -1,12 +1,13 @@
 import cv2
 import d3dshot
 
+
 class Screenshooter():
 
     def __init__(self):
         print('creating Screenshoter instance...')
         # the frame_buffer_size is set to 3 to ensure thath the
-        # screenshot returned by the method screenshot_from_second_ago 
+        # screenshot returned by the method screenshot_from_second_ago
         # is at least a second old
         self.d3d = d3dshot.create(capture_output='numpy', frame_buffer_size=4)
 

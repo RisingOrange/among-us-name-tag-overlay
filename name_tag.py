@@ -11,7 +11,8 @@ class NameTag(wx.Frame):
                  wx.NO_BORDER | wx.FRAME_SHAPED)
         wx.Frame.__init__(self, None, *args, **dargs, style=style)
 
-        self.SetTitle(f'nametag_{self.name}') # is used in main to identify when checking foreground window
+        # is used in main to identify when checking foreground window
+        self.SetTitle(f'nametag_{self.name}')
 
         self.SetTransparent(220)
 
@@ -24,7 +25,6 @@ class NameTag(wx.Frame):
         self.Show(True)
 
     def setup_text(self):
-        # put some text with a larger bold font on it
         self.st = wx.StaticText(self, label=self.name)
         font = self.st.GetFont()
         font.PointSize += 5
@@ -43,7 +43,7 @@ class NameTag(wx.Frame):
 
     def highlight(self, recursive_call=False):
 
-        # ignore non-recursive call, when highlight is already active
+        # ignore non-recursive call when highlight is already active
         if not recursive_call and self._is_highlight_active:
             return
 
@@ -55,7 +55,7 @@ class NameTag(wx.Frame):
             self._is_highlight_active = True
 
         # pop colour from start and then append it back to the end,
-        # this way the colours will be rotated
+        # this way the colours will rotate/alternate
         cur_colour = self._highlight_colours.pop(0)
         self._highlight_colours.append(cur_colour)
 

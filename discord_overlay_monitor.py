@@ -16,7 +16,7 @@ def active_speaker_names(names):
 
 def _active_speaker_names_from_img(img, names):
     # return the names of the users of which the overlay is highlighted
-    # it's by checking there are white pixels there where the name of a user is
+    # it's doing that by checking if there are white pixels where the name of the user is
 
     results = []
     for row_idx, name in enumerate(sorted_names(names)):

@@ -15,6 +15,7 @@ from utils import active_window_title
 
 config = get_config()
 
+
 class DicordClient(discord.Client):
     # connects to discord and updates the app state
 
@@ -354,7 +355,7 @@ def setup(state):
 
 
 if __name__ == '__main__':
-    mp.freeze_support() # needed when compiling with pyinstaller
+    mp.freeze_support()  # needed when compiling with pyinstaller
 
     manager = mp.Manager()
     state = manager.dict()
