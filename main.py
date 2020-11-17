@@ -16,7 +16,7 @@ from utils import active_window_title
 config = get_config()
 
 class DicordClient(discord.Client):
-    # connects to discord and updates the app state every DELAY seconds
+    # connects to discord and updates the app state
 
     def __init__(self, *args, state=None, **dargs):
         assert state is not None
@@ -29,7 +29,7 @@ class DicordClient(discord.Client):
         self.loop.create_task(self.main())
 
     def _voice_channel_members(self):
-        # returns the voice channel members of the voice channel the user is in in the GUILD
+        # returns the voice channel members of the voice channel the user is in in
 
         # first check if self.user stayed in the same voice_channel
         if (self._last_recent_channel is not None and
@@ -104,7 +104,6 @@ class NameTagController(wx.Frame):
         self._main()
 
     def _main(self):
-        # show/hide tags depending on pause state and foreground window and meeting status
         if not self.state['pause']:
             self._actual_main()
         else:
@@ -307,6 +306,7 @@ class NameTagController(wx.Frame):
         ledge_rect = wx.Rect(*LEDGE_RECT)
         cur_rect = self._name_tags_by_name[name].GetRect()
 
+        # move the tag's rect (starting at the top-left corner) across the ledge rect until a free position is found
         cur_rect.topLeft = ledge_rect.topLeft
         while ledge_rect.Contains(cur_rect.bottomLeft):
             if not any(cur_rect.Intersects(other_tag_rect) for other_tag_rect in other_tag_rects):
@@ -354,7 +354,7 @@ def setup(state):
 
 
 if __name__ == '__main__':
-    mp.freeze_support()
+    mp.freeze_support() # needed when compiling with pyinstaller
 
     manager = mp.Manager()
     state = manager.dict()
